@@ -1,7 +1,7 @@
 {
   "name": "mini-event-emitter",
   "version": "0.1.0",
-  "description": "",
+  "description": "An easy lightweight EventEmitter which has no dependencies",
   "main": "build/index.js",
   "author": "Dexter Esajas <dexter.esajas@gmail.com>",
   "license": "MIT",
