@@ -1,88 +1,106 @@
 var EventEmitter;
 
 EventEmitter = (function() {
-  var error, isString;
+  var error, isFunction, isString;
 
   isString = function(event) {
     return typeof event === 'string' || event instanceof String;
   };
 
-  error = function(log, id, event) {
+  isFunction = function(fn) {
+    return typeof fn === 'function';
+  };
+
+  error = function(self, name, id, event) {
     var msg;
-    if (!log) {
-      return;
+    if (!self.log) {
+      return self;
     }
-    msg = 'EventEmitter ~ ';
+    msg = "MiniEventEmitter ~ " + name + " ~ ";
     if (id === 1) {
       msg += "Event name should be a string";
     }
     if (id === 2) {
-      msg += "Provided function to remove is not found";
+      msg += "Provided function to remove with event \"" + event + "\" is not found";
     }
     if (id === 3) {
       msg += "Event was not provided";
     }
     if (id === 4) {
-      msg += "Emit name \"" + event + "\" doesn't exist";
+      msg += "Event \"" + event + "\" does not exist";
     }
-    return console.log(msg);
+    if (id === 5) {
+      msg += "Second param provided with event \"" + event + "\" is not a function";
+    }
+    console.log(msg);
+    return self;
   };
 
-  function EventEmitter(log1) {
-    this.log = log1;
+  function EventEmitter(log) {
+    this.log = log != null ? log : false;
     this.events = {};
   }
 
   EventEmitter.prototype.on = function(event, fn) {
     if (!isString(event)) {
-      return error(this.log, 1);
+      return error(this, 'on', 1);
+    }
+    if (!isFunction(fn)) {
+      return error(this, 'on', 5, event);
     }
     if (this.events[event]) {
-      return this.events[event].push(fn);
+      this.events[event].push(fn);
     } else {
-      return this.events[event] = [fn];
+      this.events[event] = [fn];
     }
+    return this;
   };
 
   EventEmitter.prototype.off = function(event, fn) {
     var index;
-    if (!isString(event)) {
-      return error(this.log, 1);
+    if (event && !isString(event)) {
+      return error(this, 'off', 1);
+    }
+    if (fn && !isFunction(fn)) {
+      return error(this, 'off', 5, event);
     }
     if (!event) {
-      return this.events = {};
+      this.events = {};
     } else if (!fn) {
-      return delete this.events[event];
+      if (!this.events[event]) {
+        return error(this, 'off', 4, event);
+      }
+      delete this.events[event];
     } else {
       if (-1 === (index = this.events[event].indexOf(fn))) {
-        return error(this.log, 2);
+        return error(this, 'off', 2, event);
       }
       this.events[event].splice(index, 1);
       if (this.events[event].length === 0) {
-        return delete this.events[event];
+        delete this.events[event];
       }
     }
+    return this;
   };
 
   EventEmitter.prototype.emit = function() {
-    var action, args, event, i, len, list, results;
+    var action, args, event, i, len, list;
     args = Array.from(arguments);
     event = args.shift();
     if (!event) {
-      return error(this.log, 3);
+      return error(this, 'emit', 3);
     }
     if (!isString(event)) {
-      return error(this.log, 1);
+      return error(this, 'emit', 1);
     }
     if (!(list = this.events[event])) {
-      return error(this.log, 4, event);
+      return error(this, 'emit', 4, event);
     }
-    results = [];
     for (i = 0, len = list.length; i < len; i++) {
       action = list[i];
-      results.push(action.apply(action, args));
+      action.apply(action, args);
     }
-    return results;
+    return this;
   };
 
   return EventEmitter;
