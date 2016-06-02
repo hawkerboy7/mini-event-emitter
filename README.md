@@ -1,20 +1,24 @@
-[![Build Status](https://travis-ci.org/hawkerboy7/mini-event-emitter.svg?branch=master)](https://travis-ci.org/hawkerboy7/mini-event-emitter-base)&nbsp;&nbsp;[![Join the chat at https://gitter.im/hawkerboy7/mini-event-emitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/hawkerboy7/mini-event-emitter?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://travis-ci.org/hawkerboy7/mini-event-emitter.svg?branch=master)](https://travis-ci.org/hawkerboy7/mini-event-emitter)&nbsp;&nbsp;[![Join the chat at https://gitter.im/hawkerboy7/mini-event-emitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/hawkerboy7/mini-event-emitter?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 
 # MiniEventEmitter
 
+
 `npm install --save mini-event-emitter`
+
 
 ## What is it?
 The `mini-event-emitter` is an easy lightweight javascript EventEmitter which has no dependencies.
 It is build to work with browserify.
-In using the `MiniEventEmitter` you can create new instaces. This way you can easily create multiple `MiniEventEmitters` with isolated events.
+Using the `MiniEventEmitter` you can create new instaces.
+This way you can easily create multiple `MiniEventEmitters` with isolated events.
 It also has the ability to show you a log message in case you do something that doesn't make sense.
 This should help you as a developer to debug your code faster and help you check for gost events.
 
 
 ## Getting Started
 
-### Simple
+### Simple example
 ```javascript
 // Require the MiniEventEmitter
 var Events = require('mini-event-emitter');
@@ -32,7 +36,7 @@ events.emit('test', 4, 'hello', [1,'2'[3]], {a:1,b:2,c:{d:3,e:4}});
 // Remove all 'test' eventlisteners
 events.off('test');
 
-// Won't fire because all eventlisteners have been removed
+// Won't fire because all 'test' eventlisteners have been removed
 events.emit('test');
 ```
 
@@ -67,7 +71,6 @@ events.emit('test');
 ```
 
 
-
 ## Extra's
 
 ### Logging
@@ -96,6 +99,7 @@ events.emit();
 // No Response
 ```
 
+
 ### Cases which are probably flaws using any EventEmitter
 The following cases can be recognized by the `MiniEventEmitter` and can be shown to you in the console:
 
@@ -117,8 +121,17 @@ var Events = require('mini-event-emitter');
 // Create a new instance of the MiniEventEmitter
 var events = new Events();
 
-// Chained: add event listener 'test', trigger the event and remove the event
+// Chained: add eventlistener 'test', trigger the event and remove the event
 events.on('test',function(){console.log('test');}).emit('test').off('test');
 
 // Response: 'test'
 ```
+
+
+## Planned Features - Performance optimizers
+
+- Add multiple event names by using a space as seperator. `events.on('test1 test2 test3', function(){});`
+- Check the `.push`method and possibly replace it with `array[array.length]=value` for speed gain.
+- Possibly add a `context` argument. This way the `MiniEventEmitter` can remove all events related to a specific `context`.
+- Create a `socket.io` link
+- Create a `webworker` link
