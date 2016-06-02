@@ -8,7 +8,7 @@ class EventEmitter
 	error = (self, name, id, event) ->
 
 		# Only log the message if they are required
-		return self if not self.log
+		return self if not self.settings.error
 
 		# Prefix all error messages with the EventEmitter text
 		msg = "MiniEventEmitter ~ #{name} ~ "
@@ -26,7 +26,11 @@ class EventEmitter
 		self
 
 
-	constructor: (@log = false) ->
+	constructor: (obj) ->
+
+		@settings =
+			error  : obj?.error
+			trace : obj?.trace
 
 		# Store all events
 		@events = {}
@@ -96,11 +100,15 @@ class EventEmitter
 		# Event name doesn't exist
 		return error this, 'emit', 4, event if not list = @events[event]
 
+		# If tabs is defined by the user it will receive all emited event trough that function
+		console.log "MiniEventEmitter ~ trace ~ #{event}" if @settings.trace
+
 		# Run function with all arguments except for the eventName
 		action.apply action, args for action in list
 
 		# Return this to allow chaining
 		this
+
 
 
 module.exports = EventEmitter

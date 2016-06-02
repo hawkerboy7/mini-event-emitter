@@ -74,29 +74,64 @@ events.emit('test');
 ## Extra's
 
 ### Logging
-As decribed earlier you can also log actions which don't make sense and probably are mistakes. You can turn the logging on by providing a `true` as the first argument when creating a new instace of the `MiniEventEmitter`. During the application you could also turn logging on and of while the `MiniEventEmitter` is running. `events.log = true/false`. **Pay attention though!** *Due to asynchrony turning logging on and off could be more confusing than helpfull but you are free to choose.*
+As decribed earlier you can also log actions which don't make sense and probably are mistakes `error`.
+You also have the ability to `trace` **succesfull events**.
+You can switch the logging on by providing a `{error: true, trace: true}` as the first argument when creating a new instace of the `MiniEventEmitter`.
+By default all logging is disabled.
+While running the application you could toggle the `trace` and `error`.
+`events.settings.[error/trace] = true/false`.
+**Pay attention though!**
+*Due to asynchrony toggling between on/off could be more confusing than helpfull, however you are free to choose.*
 
+#### Error example
 ```javascript
 // Require the MiniEventEmitter
 var Events = require('mini-event-emitter');
 
 // Create a new instance of the MiniEventEmitter
-var events = new Events true
+var events = new Events({error: true});
 
-// Any possible mistake will now be shown in the console.
+// Any possible mistake will now be shown in the console
 
 // Trigger the emit function without event name
 events.emit();
 
 // Response: MiniEventEmitter ~ emit ~ Event was not provided
 
-// Turn logging off again
-events.log = false
+// Turn error-logging off again
+events.settings.error = false
 
 // Trigger the emit function without event name
 events.emit();
 
 // No Response
+```
+
+#### Trace example
+```javascript
+// Require the MiniEventEmitter
+var Events = require('mini-event-emitter');
+
+// Create a new instance of the MiniEventEmitter
+var events = new Events({trace: true});
+
+// All traces of succesfull 'event emits' will be shown in the console
+
+// Trigger the emit function without event name
+events.on('test', function () {console.log("test message");});
+
+// Fire the 'test' event
+events.emit('test');
+
+// Response: 'MiniEventEmitter ~ trace ~ test', 'test message'
+
+// Turn trace-logging off again
+events.settings.trace = false
+
+// Fire the 'test' event
+events.emit('test');
+
+// Response: 'test message'
 ```
 
 
