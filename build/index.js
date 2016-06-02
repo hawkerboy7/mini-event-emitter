@@ -13,7 +13,7 @@ EventEmitter = (function() {
 
   error = function(self, name, id, event) {
     var msg;
-    if (!self.log) {
+    if (!self.settings.error) {
       return self;
     }
     msg = "MiniEventEmitter ~ " + name + " ~ ";
@@ -36,8 +36,11 @@ EventEmitter = (function() {
     return self;
   };
 
-  function EventEmitter(log) {
-    this.log = log != null ? log : false;
+  function EventEmitter(obj) {
+    this.settings = {
+      error: obj != null ? obj.error : void 0,
+      trace: obj != null ? obj.trace : void 0
+    };
     this.events = {};
   }
 
@@ -95,6 +98,9 @@ EventEmitter = (function() {
     }
     if (!(list = this.events[event])) {
       return error(this, 'emit', 4, event);
+    }
+    if (this.settings.trace) {
+      console.log("MiniEventEmitter ~ trace ~ " + event);
     }
     for (i = 0, len = list.length; i < len; i++) {
       action = list[i];
