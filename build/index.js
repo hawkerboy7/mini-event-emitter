@@ -1,7 +1,7 @@
 var EventEmitter;
 
 EventEmitter = (function() {
-  var error, isFunction, isString;
+  var check, error, isFunction, isString;
 
   isString = function(event) {
     return typeof event === 'string' || event instanceof String;
@@ -18,7 +18,7 @@ EventEmitter = (function() {
     }
     msg = "MiniEventEmitter ~ " + name + " ~ ";
     if (id === 1) {
-      msg += "Event name should be a string";
+      msg += "Event name must be a string";
     }
     if (id === 2) {
       msg += "Provided function to remove with event \"" + event + "\" is not found";
@@ -32,8 +32,18 @@ EventEmitter = (function() {
     if (id === 5) {
       msg += "Second param provided with event \"" + event + "\" is not a function";
     }
+    if (id === 6) {
+      msg += "Context must be a string";
+    }
     console.log(msg);
     return self;
+  };
+
+  check = function(context, fn) {
+    if (fn == null) {
+      fn = context;
+      return context = null;
+    }
   };
 
   function EventEmitter(obj) {
@@ -44,9 +54,17 @@ EventEmitter = (function() {
     this.events = {};
   }
 
-  EventEmitter.prototype.on = function(event, fn) {
+  EventEmitter.prototype.on = function(event, context, fn) {
+    console.log("context", context);
+    console.log("fn", fn);
+    check(context, fn);
+    console.log("context", context);
+    console.log("fn", fn);
     if (!isString(event)) {
       return error(this, 'on', 1);
+    }
+    if (!isString(context)) {
+      return error(this, 'on', 6);
     }
     if (!isFunction(fn)) {
       return error(this, 'on', 5, event);
@@ -59,10 +77,18 @@ EventEmitter = (function() {
     return this;
   };
 
-  EventEmitter.prototype.off = function(event, fn) {
+  EventEmitter.prototype.off = function(event, context, fn) {
     var index;
+    console.log("context", context);
+    console.log("fn", fn);
+    check(context, fn);
+    console.log("context", context);
+    console.log("fn", fn);
     if (event && !isString(event)) {
       return error(this, 'off', 1);
+    }
+    if (!isString(context)) {
+      return error(this, 'on', 6);
     }
     if (fn && !isFunction(fn)) {
       return error(this, 'off', 5, event);

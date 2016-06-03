@@ -1,6 +1,10 @@
 class EventEmitter
 
-	# Short cut
+	# --------------------------------------------------
+	# Private functionality
+	# --------------------------------------------------
+
+	# Shortcuts
 	isString = (event) -> typeof event is 'string' or event instanceof String
 	isFunction = (fn) -> typeof fn is 'function'
 
@@ -13,11 +17,12 @@ class EventEmitter
 		# Prefix all error messages with the EventEmitter text
 		msg = "MiniEventEmitter ~ #{name} ~ "
 
-		if id is 1 then msg += "Event name should be a string"
+		if id is 1 then msg += "Event name must be a string"
 		if id is 2 then msg += "Provided function to remove with event \"#{event}\" is not found"
 		if id is 3 then msg += "Event was not provided"
 		if id is 4 then msg += "Event \"#{event}\" does not exist"
 		if id is 5 then msg += "Second param provided with event \"#{event}\" is not a function"
+		if id is 6 then msg += "Context must be a string"
 
 		# Log the message to the console
 		console.log msg
@@ -25,21 +30,47 @@ class EventEmitter
 		# Return this/self to allow chaining
 		self
 
+	# Make context optional
+	check = (context, fn) ->
 
+		if not fn?
+
+			# Context must contain the callback function so set it correctly
+			fn = context
+
+			# Unset the context
+			context = null
+
+	# --------------------------------------------------
+	# Public functionality
+	# --------------------------------------------------
 	constructor: (obj) ->
 
 		@settings =
-			error  : obj?.error
+			error : obj?.error
 			trace : obj?.trace
 
 		# Store all events
 		@events = {}
 
 
-	on: (event, fn) ->
+	on: (event, context, fn) ->
 
-		# Event name should be a string
+		console.log "context", context
+		console.log "fn", fn
+
+		check context, fn
+
+		console.log "context", context
+		console.log "fn", fn
+
+		# Event name must be a string
 		return error this, 'on', 1 if not isString event
+
+		# Context must be a string
+		return error this, 'on', 6 if not isString context
+
+		# Fn must be a function
 		return error this, 'on', 5, event if not isFunction fn
 
 		# Either add a new event or push it to a list with others
@@ -49,10 +80,23 @@ class EventEmitter
 		this
 
 
-	off: (event, fn) ->
+	off: (event, context, fn) ->
 
-		# Event name should be a string
+		console.log "context", context
+		console.log "fn", fn
+
+		check context, fn
+
+		console.log "context", context
+		console.log "fn", fn
+
+		# Event name must be a string
 		return error this, 'off', 1 if event and not isString event
+
+		# Context must be a string
+		return error this, 'on', 6 if not isString context
+
+		# Fn must be a function
 		return error this, 'off', 5, event if fn and not isFunction fn
 
 		if not event
@@ -94,7 +138,7 @@ class EventEmitter
 		# Event was not provided
 		return error this, 'emit', 3 if not event
 
-		# Event name should be a string
+		# Event name must be a string
 		return error this, 'emit', 1 if not isString event
 
 		# Event name doesn't exist
