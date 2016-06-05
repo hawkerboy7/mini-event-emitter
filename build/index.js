@@ -33,17 +33,18 @@ EventEmitter = (function() {
       msg += "Second param provided with event \"" + event + "\" is not a function";
     }
     if (id === 6) {
-      msg += "Context must be a string";
+      msg += "Group must be a string";
     }
     console.log(msg);
     return self;
   };
 
-  check = function(context, fn) {
+  check = function(group, fn) {
     if (fn == null) {
-      fn = context;
-      return context = null;
+      fn = group;
+      group = '';
     }
+    return [group, fn];
   };
 
   function EventEmitter(obj) {
@@ -54,16 +55,13 @@ EventEmitter = (function() {
     this.events = {};
   }
 
-  EventEmitter.prototype.on = function(event, context, fn) {
-    console.log("context", context);
-    console.log("fn", fn);
-    check(context, fn);
-    console.log("context", context);
-    console.log("fn", fn);
+  EventEmitter.prototype.on = function(event, group, fn) {
+    var ref;
+    ref = check(group, fn), group = ref[0], fn = ref[1];
     if (!isString(event)) {
       return error(this, 'on', 1);
     }
-    if (!isString(context)) {
+    if (!isString(group)) {
       return error(this, 'on', 6);
     }
     if (!isFunction(fn)) {
@@ -77,17 +75,14 @@ EventEmitter = (function() {
     return this;
   };
 
-  EventEmitter.prototype.off = function(event, context, fn) {
-    var index;
-    console.log("context", context);
-    console.log("fn", fn);
-    check(context, fn);
-    console.log("context", context);
-    console.log("fn", fn);
+  EventEmitter.prototype.off = function(event, group, fn) {
+    var index, ref;
+    ref = check(group, fn), group = ref[0], fn = ref[1];
+    console.log("off", event, group);
     if (event && !isString(event)) {
       return error(this, 'off', 1);
     }
-    if (!isString(context)) {
+    if (!isString(group)) {
       return error(this, 'on', 6);
     }
     if (fn && !isFunction(fn)) {

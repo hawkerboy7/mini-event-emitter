@@ -22,7 +22,7 @@ class EventEmitter
 		if id is 3 then msg += "Event was not provided"
 		if id is 4 then msg += "Event \"#{event}\" does not exist"
 		if id is 5 then msg += "Second param provided with event \"#{event}\" is not a function"
-		if id is 6 then msg += "Context must be a string"
+		if id is 6 then msg += "Group must be a string"
 
 		# Log the message to the console
 		console.log msg
@@ -30,16 +30,19 @@ class EventEmitter
 		# Return this/self to allow chaining
 		self
 
-	# Make context optional
-	check = (context, fn) ->
+	# Make group optional
+	check = (group, fn) ->
 
 		if not fn?
 
-			# Context must contain the callback function so set it correctly
-			fn = context
+			# group must contain the callback function so set it correctly
+			fn = group
 
-			# Unset the context
-			context = null
+			# Unset the group
+			group = ''
+
+		# Return new group and function
+		[group, fn]
 
 	# --------------------------------------------------
 	# Public functionality
@@ -54,21 +57,16 @@ class EventEmitter
 		@events = {}
 
 
-	on: (event, context, fn) ->
+	on: (event, group, fn) ->
 
-		console.log "context", context
-		console.log "fn", fn
-
-		check context, fn
-
-		console.log "context", context
-		console.log "fn", fn
+		# Make group optional
+		[group, fn] = check group, fn
 
 		# Event name must be a string
 		return error this, 'on', 1 if not isString event
 
-		# Context must be a string
-		return error this, 'on', 6 if not isString context
+		# Group must be a string
+		return error this, 'on', 6 if not isString group
 
 		# Fn must be a function
 		return error this, 'on', 5, event if not isFunction fn
@@ -80,21 +78,18 @@ class EventEmitter
 		this
 
 
-	off: (event, context, fn) ->
+	off: (event, group, fn) ->
 
-		console.log "context", context
-		console.log "fn", fn
+		# Make group optional
+		[group, fn] = check group, fn
 
-		check context, fn
-
-		console.log "context", context
-		console.log "fn", fn
+		console.log "off", event, group
 
 		# Event name must be a string
 		return error this, 'off', 1 if event and not isString event
 
-		# Context must be a string
-		return error this, 'on', 6 if not isString context
+		# Group must be a string
+		return error this, 'on', 6 if not isString group
 
 		# Fn must be a function
 		return error this, 'off', 5, event if fn and not isFunction fn
