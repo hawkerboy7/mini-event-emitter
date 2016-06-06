@@ -72,7 +72,26 @@ class EventEmitter
 		return error this, 'on', 5, event if not isFunction fn
 
 		# Either add a new event or push it to a list with others
-		if @events[event] then @events[event].push fn else @events[event] = [fn]
+
+		if @events[event]
+
+			# Check if the group exists within the event
+			if @events[event][group]
+
+				# Add function to the event+group list
+				@events[event][group].push fn
+			else
+
+				# Create event+group list with the initial function
+				@events[event][group] = [fn]
+
+		else
+
+			# Create event object
+			@events[event] = {}
+
+			# Create group within the event
+			@events[event][group] = [fn]
 
 		# Return this to allow chaining
 		this
@@ -82,8 +101,6 @@ class EventEmitter
 
 		# Make group optional
 		[group, fn] = check group, fn
-
-		console.log "off", event, group
 
 		# Event name must be a string
 		return error this, 'off', 1 if event and not isString event
@@ -142,8 +159,11 @@ class EventEmitter
 		# If tabs is defined by the user it will receive all emited event trough that function
 		console.log "MiniEventEmitter ~ trace ~ #{event}" if @settings.trace
 
-		# Run function with all arguments except for the eventName
-		action.apply action, args for action in list
+		# Loop over all groups within the provided event
+		for group, actions of list
+
+			# Loop over all functions/actions within a group
+			action.apply action, args for action in actions
 
 		# Return this to allow chaining
 		this

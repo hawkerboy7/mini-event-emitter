@@ -68,9 +68,14 @@ EventEmitter = (function() {
       return error(this, 'on', 5, event);
     }
     if (this.events[event]) {
-      this.events[event].push(fn);
+      if (this.events[event][group]) {
+        this.events[event][group].push(fn);
+      } else {
+        this.events[event][group] = [fn];
+      }
     } else {
-      this.events[event] = [fn];
+      this.events[event] = {};
+      this.events[event][group] = [fn];
     }
     return this;
   };
@@ -78,7 +83,6 @@ EventEmitter = (function() {
   EventEmitter.prototype.off = function(event, group, fn) {
     var index, ref;
     ref = check(group, fn), group = ref[0], fn = ref[1];
-    console.log("off", event, group);
     if (event && !isString(event)) {
       return error(this, 'off', 1);
     }
@@ -108,7 +112,7 @@ EventEmitter = (function() {
   };
 
   EventEmitter.prototype.emit = function() {
-    var action, args, event, i, len, list;
+    var action, actions, args, event, group, i, len, list;
     args = Array.from(arguments);
     event = args.shift();
     if (!event) {
@@ -123,9 +127,12 @@ EventEmitter = (function() {
     if (this.settings.trace) {
       console.log("MiniEventEmitter ~ trace ~ " + event);
     }
-    for (i = 0, len = list.length; i < len; i++) {
-      action = list[i];
-      action.apply(action, args);
+    for (group in list) {
+      actions = list[group];
+      for (i = 0, len = actions.length; i < len; i++) {
+        action = actions[i];
+        action.apply(action, args);
+      }
     }
     return this;
   };
