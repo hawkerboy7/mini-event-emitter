@@ -1,7 +1,7 @@
 var EventEmitter;
 
 EventEmitter = (function() {
-  var check, error, isFunction, isString, objLength;
+  var check, error, isFunction, isString, objLength, remove;
 
   isString = function(event) {
     return typeof event === 'string' || event instanceof String;
@@ -42,16 +42,46 @@ EventEmitter = (function() {
     if (id === 7) {
       msg += "Group \"" + group + "\" doesn't exist for the event \"" + event + "\"";
     }
+    if (id === 8) {
+      msg += "Group \"" + group + "\" doesn't have any function to remove";
+    }
     console.log(msg);
     return self;
   };
 
   check = function(group, fn) {
-    if (fn == null) {
+    if ((fn == null) && isFunction(group)) {
       fn = group;
       group = '';
+    } else {
+      if (!group) {
+        group = '';
+      }
     }
     return [group, fn];
+  };
+
+  remove = function(self, events, groups, group, fn) {
+    var action, actions, event, i, index, len, ref, results;
+    if (!groups[group]) {
+      return error(self, 'off', 8, null, group);
+    }
+    ref = groups[group];
+    results = [];
+    for (event in ref) {
+      actions = ref[event];
+      for (i = 0, len = actions.length; i < len; i++) {
+        action = actions[i];
+        index = events[event].indexOf(action);
+        events[event].splice(index, 1);
+      }
+      if (events[event].length === 0) {
+        results.push(delete events[event]);
+      } else {
+        results.push(void 0);
+      }
+    }
+    return results;
   };
 
   function EventEmitter(obj) {
@@ -60,6 +90,7 @@ EventEmitter = (function() {
       trace: obj != null ? obj.trace : void 0
     };
     this.events = {};
+    this.groups = {};
   }
 
   EventEmitter.prototype.on = function(event, group, fn) {
@@ -74,21 +105,26 @@ EventEmitter = (function() {
     if (!isFunction(fn)) {
       return error(this, 'on', 5, event);
     }
-    if (this.events[event]) {
-      if (this.events[event][group]) {
-        this.events[event][group].push(fn);
+    if (this.groups[group]) {
+      if (this.groups[group][event]) {
+        this.groups[group][event].push(fn);
       } else {
-        this.events[event][group] = [fn];
+        this.groups[group][event] = [fn];
       }
     } else {
-      this.events[event] = {};
-      this.events[event][group] = [fn];
+      this.groups[group] = {};
+      this.groups[group][event] = [fn];
+    }
+    if (this.events[event]) {
+      this.events[event].push(fn);
+    } else {
+      this.events[event] = [fn];
     }
     return this;
   };
 
   EventEmitter.prototype.off = function(event, group, fn) {
-    var index, ref;
+    var ref;
     ref = check(group, fn), group = ref[0], fn = ref[1];
     if (event && !isString(event)) {
       return error(this, 'off', 1);
@@ -100,34 +136,17 @@ EventEmitter = (function() {
       return error(this, 'off', 5, event);
     }
     if (!event) {
-      this.events = {};
-    } else {
-      if (!this.events[event]) {
-        return error(this, 'off', 4, event);
-      }
-      if (!fn) {
-        delete this.events[event];
-      } else {
-        if (!this.events[event][group]) {
-          return error(this, 'off', 7, event, group);
-        }
-        if (-1 === (index = this.events[event][group].indexOf(fn))) {
-          return error(this, 'off', 2, event, group);
-        }
-        this.events[event][group].splice(index, 1);
-        if (this.events[event][group].length === 0) {
-          delete this.events[event][group];
-        }
-        if (objLength(this.events[event] === 0)) {
-          delete this.events[event];
-        }
-      }
+      remove(this, this.events, this.groups, group, fn);
+      return this;
+    }
+    if (!this.events[event]) {
+      return error(this, 'off', 4, event);
     }
     return this;
   };
 
   EventEmitter.prototype.emit = function() {
-    var action, actions, args, event, group, i, len, list;
+    var action, args, event, i, len, list;
     args = Array.from(arguments);
     event = args.shift();
     if (!event) {
@@ -142,12 +161,9 @@ EventEmitter = (function() {
     if (this.settings.trace) {
       console.log("MiniEventEmitter ~ trace ~ " + event);
     }
-    for (group in list) {
-      actions = list[group];
-      for (i = 0, len = actions.length; i < len; i++) {
-        action = actions[i];
-        action.apply(action, args);
-      }
+    for (i = 0, len = list.length; i < len; i++) {
+      action = list[i];
+      action.apply(action, args);
     }
     return this;
   };

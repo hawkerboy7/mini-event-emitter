@@ -25,6 +25,7 @@ class EventEmitter
 		if id is 5 then msg += "Second param provided with event \"#{event}\" is not a function"
 		if id is 6 then msg += "Group must be a string"
 		if id is 7 then msg += "Group \"#{group}\" doesn't exist for the event \"#{event}\""
+		if id is 8 then msg += "Group \"#{group}\" doesn't have any function to remove"
 
 		# Log the message to the console
 		console.log msg
@@ -35,7 +36,7 @@ class EventEmitter
 	# Make group optional
 	check = (group, fn) ->
 
-		if not fn?
+		if not fn? and isFunction group
 
 			# group must contain the callback function so set it correctly
 			fn = group
@@ -43,8 +44,34 @@ class EventEmitter
 			# Unset the group
 			group = ''
 
+		else
+
+			# Make sure the group is a string
+			group = '' if not group
+
 		# Return new group and function
 		[group, fn]
+
+	# Remove function from event and possibly the event itself as well
+	remove = (self, events, groups, group, fn) ->
+
+		return error self, 'off', 8, null, group if not groups[group]
+
+		# Loop over all events of the provided group
+		for event, actions of groups[group]
+
+			# Loop over all found function in the group
+			for action in actions
+
+				# Get the index of the stored function
+				index = events[event].indexOf action
+
+				# Remove function from events list
+				events[event].splice index, 1
+
+			# If no functions are left within the group remove it
+			delete events[event] if events[event].length is 0
+
 
 	# --------------------------------------------------
 	# Public functionality
@@ -57,6 +84,7 @@ class EventEmitter
 
 		# Store all events
 		@events = {}
+		@groups = {}
 
 
 	on: (event, group, fn) ->
@@ -73,27 +101,22 @@ class EventEmitter
 		# Fn must be a function
 		return error this, 'on', 5, event if not isFunction fn
 
-		# Either add a new event or push it to a list with others
+		# Check if the provided group exists
+		if @groups[group]
 
-		if @events[event]
-
-			# Check if the group exists within the event
-			if @events[event][group]
-
-				# Add function to the event+group list
-				@events[event][group].push fn
-			else
-
-				# Create event+group list with the initial function
-				@events[event][group] = [fn]
+			# Check if the provided event exists within this group and either push to or create an array with functions
+			if @groups[group][event] then @groups[group][event].push fn else @groups[group][event] = [fn]
 
 		else
 
-			# Create event object
-			@events[event] = {}
+			# Create the provided group
+			@groups[group] = {}
 
-			# Create group within the event
-			@events[event][group] = [fn]
+			# Create an array with function for this group and event
+			@groups[group][event] = [fn]
+
+		# Either add a new event or push it to a list with others
+		if @events[event] then @events[event].push fn else @events[event] = [fn]
 
 		# Return this to allow chaining
 		this
@@ -115,35 +138,31 @@ class EventEmitter
 
 		if not event
 
-			# Reset events
-			@events = {}
+			# Remove all event+eventListeners related with the provided group
+			remove this, @events, @groups, group, fn
 
-		else
+			# Return this to allow chaining
+			return this
 
-			# Event name doesn't exist
-			return error this, 'off', 4, event if not @events[event]
+		# Event name doesn't exist
+		return error this, 'off', 4, event if not @events[event]
 
-			if not fn
 
-				# Remove all function listeners by eventname
-				delete @events[event]
+		# if not fn
 
-			else
+		# 	# Remove all function listeners by eventname
+		# 	delete @events[event]
 
-				# Group name doesn't exist for this event
-				return error this, 'off', 7, event, group if not @events[event][group]
+		# else
 
-				# Function to remove does not exist
-				return error this, 'off', 2, event, group if -1 is index = @events[event][group].indexOf fn
+		# 	# Function to remove does not exist
+		# 	return error this, 'off', 2, event if -1 is index = @events[event].indexOf fn
 
-				# Remove function from events list
-				@events[event][group].splice index, 1
+		# 	# Remove function from events list
+		# 	@events[event].splice index, 1
 
-				# If no functions are left within the group remove it
-				delete @events[event][group] if @events[event][group].length is 0
-
-				# If no groups are left within the event remove the event
-				delete @events[event] if objLength @events[event] is 0
+		# 	# If no functions are left within the group remove it
+		# 	delete @events[event] if @events[event].length is 0
 
 		# Return this to allow chaining
 		this
@@ -169,11 +188,8 @@ class EventEmitter
 		# If tabs is defined by the user it will receive all emited event trough that function
 		console.log "MiniEventEmitter ~ trace ~ #{event}" if @settings.trace
 
-		# Loop over all groups within the provided event
-		for group, actions of list
-
-			# Loop over all functions/actions within a group
-			action.apply action, args for action in actions
+		# Loop over all functions/actions within a group
+		action.apply action, args for action in list
 
 		# Return this to allow chaining
 		this
