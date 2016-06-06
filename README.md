@@ -165,8 +165,7 @@ events.on('test',function(){console.log('test');}).emit('test').off('test');
 
 ## Planned Features - Performance optimizers
 
-- Possibly add a `context` argument. This way the `MiniEventEmitter` can remove all events related to a specific `context`.
-- Check the `.push`method and possibly replace it with `array[array.length]=value` for speed gain.
+- Check all code for possible speed gains: `.push` method possibly replace it with `array[array.length]=value`.
 - Create a `socket.io` link
 - Create a `webworker` link
 
