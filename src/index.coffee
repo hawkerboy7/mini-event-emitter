@@ -25,7 +25,8 @@ class EventEmitter
 		if id is 5 then msg += "Second param provided with event \"#{event}\" is not a function"
 		if id is 6 then msg += "Group must be a string"
 		if id is 7 then msg += "Group \"#{group}\" doesn't exist for the event \"#{event}\""
-		if id is 8 then msg += "Group \"#{group}\" doesn't have any function to remove"
+		if id is 8 then msg += "Group \"#{group}\" with event \"#{event}\" does not exists"
+		if id is 9 then msg += "Event \"#{event}\" does not exist in group \"#{group}\""
 
 		# Log the message to the console
 		console.log msg
@@ -52,25 +53,39 @@ class EventEmitter
 		# Return new group and function
 		[group, fn]
 
-	# Remove function from event and possibly the event itself as well
-	remove = (self, events, groups, group, fn) ->
+	# # Remove function from event and possibly the event itself as well
+	# remove = (self, events, groups, event, group) ->
 
-		return error self, 'off', 8, null, group if not groups[group]
+	# 	# Provided group must exist
+	# 	return error this, 'off', 8, null, group if not groups[group]
 
-		# Loop over all events of the provided group
-		for event, actions of groups[group]
+	# 	# Define remove function
+	# 	removeFn = ->
 
-			# Loop over all found function in the group
-			for action in actions
+	# 		console.log "removeFn"
 
-				# Get the index of the stored function
-				index = events[event].indexOf action
+	# 		# Loop over all found function in the group
+	# 		for action in actions
 
-				# Remove function from events list
-				events[event].splice index, 1
+	# 			# Get the index of the stored function
+	# 			index = events[event].indexOf action
 
-			# If no functions are left within the group remove it
-			delete events[event] if events[event].length is 0
+	# 			# Remove function from events list
+	# 			events[event].splice index, 1
+
+	# 		# If no functions are left within the group remove it
+	# 		delete events[event] if events[event].length is 0
+
+	# 	# Check if a singel event is provided
+	# 	if event
+
+	# 		# Remove a single event of the provided group
+	# 		removeFn()
+
+	# 	else
+
+	# 		# Remove all events of the provided group
+	# 		removeFn() for event, actions of groups[group]
 
 
 	# --------------------------------------------------
@@ -124,6 +139,23 @@ class EventEmitter
 
 	off: (event, group, fn) ->
 
+		# Define the actual remove function variables are already know due to the scope the function is in
+		removeFn = =>
+
+			console.log "removeFn"
+
+			# Loop over all found function in the group
+			for action in actions
+
+				# Get the index of the stored function
+				index = @events[event].indexOf action
+
+				# Remove function from events list
+				@events[event].splice index, 1
+
+			# If no functions are left within the group remove it
+			delete @events[event] if @events[event].length is 0
+
 		# Make group optional
 		[group, fn] = check group, fn
 
@@ -136,27 +168,37 @@ class EventEmitter
 		# Fn must be a function
 		return error this, 'off', 5, event if fn and not isFunction fn
 
+		# Provided group must exist
+		return error this, 'off', 8, event, group if not @groups[group]
+
 		if not event
 
-			# Remove all event+eventListeners related with the provided group
-			remove this, @events, @groups, group, fn
+			# Remove all events of the provided group
+			removeFn() for event, actions of @groups[group]
 
 			# Return this to allow chaining
 			return this
 
-		# Event name doesn't exist
-		return error this, 'off', 4, event if not @events[event]
+		# Event name doesn't exist for this group
+		return error this, 'off', 4, event, group if not actions = @groups[group][event]
+
+		# Check if a function to be removed is defined
+		if not fn
+
+			# Remove the eventListeners of the specified group+event
+			return removeFn()
 
 
-		# if not fn
+		console.log "Remove specific function with event and group", event, group
 
-		# 	# Remove all function listeners by eventname
-		# 	delete @events[event]
+			# if @groups[group][event]
 
-		# else
 
-		# 	# Function to remove does not exist
-		# 	return error this, 'off', 2, event if -1 is index = @events[event].indexOf fn
+			# return if groups[group][event]
+			# 	?.indexOf fn
+
+			# # Function to remove does not exist
+			# return error this, 'off', 2, event if -1 is index = @events[event].indexOf fn
 
 		# 	# Remove function from events list
 		# 	@events[event].splice index, 1

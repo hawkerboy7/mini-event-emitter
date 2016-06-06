@@ -1,7 +1,7 @@
 var EventEmitter;
 
 EventEmitter = (function() {
-  var check, error, isFunction, isString, objLength, remove;
+  var check, error, isFunction, isString, objLength;
 
   isString = function(event) {
     return typeof event === 'string' || event instanceof String;
@@ -43,7 +43,10 @@ EventEmitter = (function() {
       msg += "Group \"" + group + "\" doesn't exist for the event \"" + event + "\"";
     }
     if (id === 8) {
-      msg += "Group \"" + group + "\" doesn't have any function to remove";
+      msg += "Group \"" + group + "\" with event \"" + event + "\" does not exists";
+    }
+    if (id === 9) {
+      msg += "Event \"" + event + "\" does not exist in group \"" + group + "\"";
     }
     console.log(msg);
     return self;
@@ -59,29 +62,6 @@ EventEmitter = (function() {
       }
     }
     return [group, fn];
-  };
-
-  remove = function(self, events, groups, group, fn) {
-    var action, actions, event, i, index, len, ref, results;
-    if (!groups[group]) {
-      return error(self, 'off', 8, null, group);
-    }
-    ref = groups[group];
-    results = [];
-    for (event in ref) {
-      actions = ref[event];
-      for (i = 0, len = actions.length; i < len; i++) {
-        action = actions[i];
-        index = events[event].indexOf(action);
-        events[event].splice(index, 1);
-      }
-      if (events[event].length === 0) {
-        results.push(delete events[event]);
-      } else {
-        results.push(void 0);
-      }
-    }
-    return results;
   };
 
   function EventEmitter(obj) {
@@ -124,7 +104,21 @@ EventEmitter = (function() {
   };
 
   EventEmitter.prototype.off = function(event, group, fn) {
-    var ref;
+    var actions, ref, ref1, removeFn;
+    removeFn = (function(_this) {
+      return function() {
+        var action, i, index, len;
+        console.log("removeFn");
+        for (i = 0, len = actions.length; i < len; i++) {
+          action = actions[i];
+          index = _this.events[event].indexOf(action);
+          _this.events[event].splice(index, 1);
+        }
+        if (_this.events[event].length === 0) {
+          return delete _this.events[event];
+        }
+      };
+    })(this);
     ref = check(group, fn), group = ref[0], fn = ref[1];
     if (event && !isString(event)) {
       return error(this, 'off', 1);
@@ -135,13 +129,24 @@ EventEmitter = (function() {
     if (fn && !isFunction(fn)) {
       return error(this, 'off', 5, event);
     }
+    if (!this.groups[group]) {
+      return error(this, 'off', 8, event, group);
+    }
     if (!event) {
-      remove(this, this.events, this.groups, group, fn);
+      ref1 = this.groups[group];
+      for (event in ref1) {
+        actions = ref1[event];
+        removeFn();
+      }
       return this;
     }
-    if (!this.events[event]) {
-      return error(this, 'off', 4, event);
+    if (!(actions = this.groups[group][event])) {
+      return error(this, 'off', 4, event, group);
     }
+    if (!fn) {
+      return removeFn();
+    }
+    console.log("Remove specific function with event and group", event, group);
     return this;
   };
 
