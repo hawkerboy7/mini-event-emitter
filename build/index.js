@@ -104,7 +104,7 @@ EventEmitter = (function() {
   };
 
   EventEmitter.prototype.off = function(event, group, fn) {
-    var actions, ref, ref1, removeFn;
+    var actions, index, ref, ref1, removeFn;
     removeFn = (function(_this) {
       return function() {
         var action, i, index, len;
@@ -144,9 +144,17 @@ EventEmitter = (function() {
       return error(this, 'off', 4, event, group);
     }
     if (!fn) {
-      return removeFn();
+      removeFn();
+      return this;
     }
-    console.log("Remove specific function with event and group", event, group);
+    if (-1 === (index = actions.indexOf(fn))) {
+      return error(this, 'off', 2, event, group);
+    }
+    index = this.events[event].indexOf(fn);
+    this.events[event].splice(index, 1);
+    if (this.events[event].length === 0) {
+      delete this.events[event];
+    }
     return this;
   };
 

@@ -186,25 +186,21 @@ class EventEmitter
 		if not fn
 
 			# Remove the eventListeners of the specified group+event
-			return removeFn()
+			removeFn()
 
+			# Return this to allow chaining
+			return this
 
-		console.log "Remove specific function with event and group", event, group
+		return error this, 'off', 2, event, group if -1 is index = actions.indexOf fn
 
-			# if @groups[group][event]
+		# Get the index of the stored function
+		index = @events[event].indexOf fn
 
+		# Remove function from events list
+		@events[event].splice index, 1
 
-			# return if groups[group][event]
-			# 	?.indexOf fn
-
-			# # Function to remove does not exist
-			# return error this, 'off', 2, event if -1 is index = @events[event].indexOf fn
-
-		# 	# Remove function from events list
-		# 	@events[event].splice index, 1
-
-		# 	# If no functions are left within the group remove it
-		# 	delete @events[event] if @events[event].length is 0
+		# If no functions are left within the group remove it
+		delete @events[event] if @events[event].length is 0
 
 		# Return this to allow chaining
 		this
