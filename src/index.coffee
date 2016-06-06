@@ -6,10 +6,11 @@ class EventEmitter
 
 	# Shortcuts
 	isString = (event) -> typeof event is 'string' or event instanceof String
+	objLength = (obj) -> Object.keys(obj).length
 	isFunction = (fn) -> typeof fn is 'function'
 
 	# Handling all error's
-	error = (self, name, id, event) ->
+	error = (self, name, id, event, group) ->
 
 		# Only log the message if they are required
 		return self if not self.settings.error
@@ -18,11 +19,12 @@ class EventEmitter
 		msg = "MiniEventEmitter ~ #{name} ~ "
 
 		if id is 1 then msg += "Event name must be a string"
-		if id is 2 then msg += "Provided function to remove with event \"#{event}\" is not found"
+		if id is 2 then msg += "Provided function to remove with event \"#{event}\" in group \"#{group}\" is not found"
 		if id is 3 then msg += "Event was not provided"
 		if id is 4 then msg += "Event \"#{event}\" does not exist"
 		if id is 5 then msg += "Second param provided with event \"#{event}\" is not a function"
 		if id is 6 then msg += "Group must be a string"
+		if id is 7 then msg += "Group \"#{group}\" doesn't exist for the event \"#{event}\""
 
 		# Log the message to the console
 		console.log msg
@@ -116,24 +118,32 @@ class EventEmitter
 			# Reset events
 			@events = {}
 
-		else if not fn
+		else
 
 			# Event name doesn't exist
 			return error this, 'off', 4, event if not @events[event]
 
-			# Remove all function listeners by eventname
-			delete @events[event]
+			if not fn
 
-		else
+				# Remove all function listeners by eventname
+				delete @events[event]
 
-			# Function to remove does not exist
-			return error this, 'off', 2, event if -1 is index = @events[event].indexOf fn
+			else
 
-			# Remove function from events list
-			@events[event].splice index, 1
+				# Group name doesn't exist for this event
+				return error this, 'off', 7, event, group if not @events[event][group]
 
-			# If no functions are left also remove the attribute in functions
-			delete @events[event] if @events[event].length is 0
+				# Function to remove does not exist
+				return error this, 'off', 2, event, group if -1 is index = @events[event][group].indexOf fn
+
+				# Remove function from events list
+				@events[event][group].splice index, 1
+
+				# If no functions are left within the group remove it
+				delete @events[event][group] if @events[event][group].length is 0
+
+				# If no groups are left within the event remove the event
+				delete @events[event] if objLength @events[event] is 0
 
 		# Return this to allow chaining
 		this
