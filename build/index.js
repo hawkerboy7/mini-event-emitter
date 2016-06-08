@@ -1,6 +1,6 @@
-var EventEmitter;
+var MiniEventEmitter;
 
-EventEmitter = (function() {
+MiniEventEmitter = (function() {
   var check, error, isFunction, isString, objLength;
 
   isString = function(event) {
@@ -48,7 +48,7 @@ EventEmitter = (function() {
     if (id === 9) {
       msg += "Event \"" + event + "\" does not exist in group \"" + group + "\"";
     }
-    console.log(msg);
+    console.warn(msg);
     return self;
   };
 
@@ -64,7 +64,7 @@ EventEmitter = (function() {
     return [group, fn];
   };
 
-  function EventEmitter(obj) {
+  function MiniEventEmitter(obj) {
     this.settings = {
       error: obj != null ? obj.error : void 0,
       trace: obj != null ? obj.trace : void 0
@@ -73,7 +73,7 @@ EventEmitter = (function() {
     this.groups = {};
   }
 
-  EventEmitter.prototype.on = function(event, group, fn) {
+  MiniEventEmitter.prototype.on = function(event, group, fn) {
     var ref;
     ref = check(group, fn), group = ref[0], fn = ref[1];
     if (!isString(event)) {
@@ -103,12 +103,11 @@ EventEmitter = (function() {
     return this;
   };
 
-  EventEmitter.prototype.off = function(event, group, fn) {
+  MiniEventEmitter.prototype.off = function(event, group, fn) {
     var actions, index1, index2, ref, ref1, removeFn;
     removeFn = (function(_this) {
       return function() {
         var action, i, index, len;
-        console.log("removeFn");
         for (i = 0, len = actions.length; i < len; i++) {
           action = actions[i];
           index = _this.events[event].indexOf(action);
@@ -147,6 +146,9 @@ EventEmitter = (function() {
     if (!fn) {
       removeFn();
       delete this.groups[group][event];
+      if (0 === objLength(this.groups[group])) {
+        delete this.groups[group];
+      }
       return this;
     }
     if (-1 === (index1 = actions.indexOf(fn))) {
@@ -167,7 +169,7 @@ EventEmitter = (function() {
     return this;
   };
 
-  EventEmitter.prototype.emit = function() {
+  MiniEventEmitter.prototype.emit = function() {
     var action, args, event, i, len, list;
     args = Array.from(arguments);
     event = args.shift();
@@ -181,7 +183,7 @@ EventEmitter = (function() {
       return error(this, 'emit', 4, event);
     }
     if (this.settings.trace) {
-      console.log("MiniEventEmitter ~ trace ~ " + event);
+      console.debug("MiniEventEmitter ~ trace ~ " + event);
     }
     for (i = 0, len = list.length; i < len; i++) {
       action = list[i];
@@ -190,12 +192,20 @@ EventEmitter = (function() {
     return this;
   };
 
-  EventEmitter.prototype.trigger = function() {
+  MiniEventEmitter.prototype.trigger = function() {
     return this.emit.apply(this, arguments);
   };
 
-  return EventEmitter;
+  return MiniEventEmitter;
 
 })();
 
-module.exports = EventEmitter;
+(function() {
+  if ((typeof module !== "undefined" && module !== null) && module.exports) {
+    return module.exports = MiniEventEmitter;
+  } else if (window) {
+    return window.MiniEventEmitter = MiniEventEmitter;
+  } else {
+    return console.warn("Cannot expose MiniEventEmitter");
+  }
+})();

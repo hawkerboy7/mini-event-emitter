@@ -1,4 +1,4 @@
-class EventEmitter
+class MiniEventEmitter
 
 	# --------------------------------------------------
 	# Private functionality
@@ -15,7 +15,7 @@ class EventEmitter
 		# Only log the message if they are required
 		return self if not self.settings.error
 
-		# Prefix all error messages with the EventEmitter text
+		# Prefix all error messages with the MiniEventEmitter text
 		msg = "MiniEventEmitter ~ #{name} ~ "
 
 		if id is 1 then msg += "Event name must be a string"
@@ -29,7 +29,7 @@ class EventEmitter
 		if id is 9 then msg += "Event \"#{event}\" does not exist in group \"#{group}\""
 
 		# Log the message to the console
-		console.log msg
+		console.warn msg
 
 		# Return this/self to allow chaining
 		self
@@ -108,8 +108,6 @@ class EventEmitter
 		# Define the actual remove function variables are already know due to the scope the function is in
 		removeFn = =>
 
-			console.log "removeFn"
-
 			# Loop over all found function in the group
 			for action in actions
 
@@ -160,6 +158,9 @@ class EventEmitter
 			# Remove all events related to the group
 			delete @groups[group][event]
 
+			# If no events are left within the group remove it
+			delete @groups[group] if 0 is objLength @groups[group]
+
 			# Return this to allow chaining
 			return this
 
@@ -205,7 +206,7 @@ class EventEmitter
 		return error this, 'emit', 4, event if not list = @events[event]
 
 		# If tabs is defined by the user it will receive all emited event trough that function
-		console.log "MiniEventEmitter ~ trace ~ #{event}" if @settings.trace
+		console.debug "MiniEventEmitter ~ trace ~ #{event}" if @settings.trace
 
 		# Loop over all functions/actions within a group
 		action.apply action, args for action in list
@@ -220,4 +221,12 @@ class EventEmitter
 
 
 
-module.exports = EventEmitter
+# Export for browserify or Plain Browser
+(->
+	if module? && module.exports
+		module.exports = MiniEventEmitter
+	else if window
+		window.MiniEventEmitter = MiniEventEmitter
+	else
+		console.warn "Cannot expose MiniEventEmitter"
+)()
