@@ -214,5 +214,10 @@ class EventEmitter
 		this
 
 
+	trigger: ->
+
+		@emit.apply @, arguments
+
+
 
 module.exports = EventEmitter

@@ -190,6 +190,10 @@ EventEmitter = (function() {
     return this;
   };
 
+  EventEmitter.prototype.trigger = function() {
+    return this.emit.apply(this, arguments);
+  };
+
   return EventEmitter;
 
 })();
