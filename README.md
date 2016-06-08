@@ -165,8 +165,9 @@ events.on('test',function(){console.log('test');}).emit('test').off('test');
 
 ## Planned Features - Performance optimizers
 
-- Add multiple event names by using a space as seperator. `events.on('test1 test2 test3', function(){});`
-- Check the `.push`method and possibly replace it with `array[array.length]=value` for speed gain.
-- Possibly add a `context` argument. This way the `MiniEventEmitter` can remove all events related to a specific `context`.
+- Check all code for possible speed gains: `.push` method possibly replace it with `array[array.length]=value`.
 - Create a `socket.io` link
 - Create a `webworker` link
+
+<!-- Not sure uf this is a smart thing to do tough in the sense that it may be harder to debug or keep clarity in your project -->
+- Add multiple event names by using a space as seperator. `events.on('test1 test2 test3', function(){});`
