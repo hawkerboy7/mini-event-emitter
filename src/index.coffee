@@ -53,40 +53,6 @@ class EventEmitter
 		# Return new group and function
 		[group, fn]
 
-	# # Remove function from event and possibly the event itself as well
-	# remove = (self, events, groups, event, group) ->
-
-	# 	# Provided group must exist
-	# 	return error this, 'off', 8, null, group if not groups[group]
-
-	# 	# Define remove function
-	# 	removeFn = ->
-
-	# 		console.log "removeFn"
-
-	# 		# Loop over all found function in the group
-	# 		for action in actions
-
-	# 			# Get the index of the stored function
-	# 			index = events[event].indexOf action
-
-	# 			# Remove function from events list
-	# 			events[event].splice index, 1
-
-	# 		# If no functions are left within the group remove it
-	# 		delete events[event] if events[event].length is 0
-
-	# 	# Check if a singel event is provided
-	# 	if event
-
-	# 		# Remove a single event of the provided group
-	# 		removeFn()
-
-	# 	else
-
-	# 		# Remove all events of the provided group
-	# 		removeFn() for event, actions of groups[group]
-
 
 	# --------------------------------------------------
 	# Public functionality
@@ -176,6 +142,9 @@ class EventEmitter
 			# Remove all events of the provided group
 			removeFn() for event, actions of @groups[group]
 
+			# Remove the group
+			delete @groups[group]
+
 			# Return this to allow chaining
 			return this
 
@@ -188,16 +157,28 @@ class EventEmitter
 			# Remove the eventListeners of the specified group+event
 			removeFn()
 
+			# Remove all events related to the group
+			delete @groups[group][event]
+
 			# Return this to allow chaining
 			return this
 
-		return error this, 'off', 2, event, group if -1 is index = actions.indexOf fn
+		return error this, 'off', 2, event, group if -1 is index1 = actions.indexOf fn
+
+		# Remove function from groups list
+		actions.splice index1, 1
+
+		# If no functions are left within the event of a group remove it
+		delete @groups[group][event] if actions.length is 0
+
+		# If no events are left within the group remove it
+		delete @groups[group] if 0 is objLength @groups[group]
 
 		# Get the index of the stored function
-		index = @events[event].indexOf fn
+		index2 = @events[event].indexOf fn
 
 		# Remove function from events list
-		@events[event].splice index, 1
+		@events[event].splice index2, 1
 
 		# If no functions are left within the group remove it
 		delete @events[event] if @events[event].length is 0

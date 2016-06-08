@@ -104,7 +104,7 @@ EventEmitter = (function() {
   };
 
   EventEmitter.prototype.off = function(event, group, fn) {
-    var actions, index, ref, ref1, removeFn;
+    var actions, index1, index2, ref, ref1, removeFn;
     removeFn = (function(_this) {
       return function() {
         var action, i, index, len;
@@ -138,6 +138,7 @@ EventEmitter = (function() {
         actions = ref1[event];
         removeFn();
       }
+      delete this.groups[group];
       return this;
     }
     if (!(actions = this.groups[group][event])) {
@@ -145,13 +146,21 @@ EventEmitter = (function() {
     }
     if (!fn) {
       removeFn();
+      delete this.groups[group][event];
       return this;
     }
-    if (-1 === (index = actions.indexOf(fn))) {
+    if (-1 === (index1 = actions.indexOf(fn))) {
       return error(this, 'off', 2, event, group);
     }
-    index = this.events[event].indexOf(fn);
-    this.events[event].splice(index, 1);
+    actions.splice(index1, 1);
+    if (actions.length === 0) {
+      delete this.groups[group][event];
+    }
+    if (0 === objLength(this.groups[group])) {
+      delete this.groups[group];
+    }
+    index2 = this.events[event].indexOf(fn);
+    this.events[event].splice(index2, 1);
     if (this.events[event].length === 0) {
       delete this.events[event];
     }
