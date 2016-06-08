@@ -15,6 +15,11 @@ This way you can easily create multiple `MiniEventEmitters` with isolated events
 It also has the ability to show you a log message in case you do something that doesn't make sense.
 This should help you as a developer to debug your code faster and help you check for gost events.
 
+As of version `0.3.0` you have the possibility to add a group to an event and eventListener.
+So later in your code you can remove events and eventListeners bound to a specific group (e.g. a DOM element).
+Using `.emit()` events will be send to all groups.
+Also the `.trigger()` is introduced which does the exact same thing as `.emit()` but some people prefer `.trigger()` over `.emit()` so now you can choose.
+
 
 ## Getting Started
 
@@ -42,6 +47,35 @@ events.emit('test');
 
 
 ### Removing specific listener functions
+```javascript
+// Require the MiniEventEmitter
+var Events = require('mini-event-emitter');
+
+// Create a new instance of the MiniEventEmitter
+var events = new Events();
+
+// Create some test functions and let all of them be triggerd on the test event
+events.on('test', test1 = function () { console.log('test1'); });
+events.on('test', test2 = function () { console.log('test2'); });
+events.on('test', test3 = function () { console.log('test3'); });
+events.on('test', test4 = function () { console.log('test4'); });
+
+// Fire the test event
+events.emit('test');
+
+// Response: 'test1', 'test2', 'test3', 'test4'
+
+// Remove specific 'test' eventlisteners by providing the references to the functions
+events.off('test',test2);
+events.off('test',test3);
+
+// Fire the test event
+events.emit('test');
+
+// Response: 'test1', 'test4'
+```
+
+### Using groups
 ```javascript
 // Require the MiniEventEmitter
 var Events = require('mini-event-emitter');
@@ -141,8 +175,9 @@ The following cases can be recognized by the `MiniEventEmitter` and can be shown
 - `.emit` an event which has no listener for it.
 - Using `.emit` without an event name.
 - Using `.off` on an event name that doesn't exist
-- Using `.off` and providing a function that doesn't exist with the provided event name
-- Use something other than a sting as event name.
+- Using `.off` on an event name that is not inside the provided group
+- Using `.off` and providing a function that doesn't exist with the provided event name (and group)
+- Use something other than a sting as event or group name.
 - Use something other than a function as an eventlistener.
 
 
@@ -165,9 +200,8 @@ events.on('test',function(){console.log('test');}).emit('test').off('test');
 
 ## Planned Features - Performance optimizers
 
-- Check all code for possible speed gains: `.push` method possibly replace it with `array[array.length]=value`.
+- Send events to specific groups
 - Create a `socket.io` link
 - Create a `webworker` link
-
-<!-- Not sure uf this is a smart thing to do tough in the sense that it may be harder to debug or keep clarity in your project -->
-- Add multiple event names by using a space as seperator. `events.on('test1 test2 test3', function(){});`
+- Add support for require.js / common.js
+- Check all code for possible speed gains: `.push` method possibly replace it with `array[array.length]=value`.

@@ -217,7 +217,11 @@ class MiniEventEmitter
 
 	trigger: ->
 
+		# Send request along to emit
 		@emit.apply @, arguments
+
+		# Return this to allow chaining
+		this
 
 
 

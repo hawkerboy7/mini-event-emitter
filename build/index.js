@@ -193,7 +193,8 @@ MiniEventEmitter = (function() {
   };
 
   MiniEventEmitter.prototype.trigger = function() {
-    return this.emit.apply(this, arguments);
+    this.emit.apply(this, arguments);
+    return this;
   };
 
   return MiniEventEmitter;
