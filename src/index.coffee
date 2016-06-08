@@ -221,7 +221,7 @@ class MiniEventEmitter
 
 
 
-# Export for browserify or Plain Browser
+# Export for browserify or simple browser
 (->
 	if module? && module.exports
 		module.exports = MiniEventEmitter
