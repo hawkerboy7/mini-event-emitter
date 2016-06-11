@@ -1,4 +1,4 @@
-require('de-builder')({
+require("de-builder")({
 	io: 8002,
 	forever: {
 		enabled : false
