@@ -28,8 +28,8 @@ class MiniEventEmitter
 		if id is 8 then msg += "Group \"#{group}\" with event \"#{event}\" does not exists"
 		if id is 9 then msg += "Event \"#{event}\" does not exist in group \"#{group}\""
 
-		# Log the message to the console
-		console.warn msg
+		# Log the message to the console (as a warning if available)
+		if console.warn then console.warn msg else console.log msg
 
 		# Return this/self to allow chaining
 		self
@@ -206,7 +206,13 @@ class MiniEventEmitter
 		return error this, 'emit', 4, event if not list = @events[event]
 
 		# If tabs is defined by the user it will receive all emited event trough that function
-		console.debug "MiniEventEmitter ~ trace ~ #{event}" if @settings.trace
+		if @settings.trace
+
+			# The trace message
+			msg = "MiniEventEmitter ~ trace ~ #{event}"
+
+			# Log the message to the console (as a debug if available)
+			if console.debug then console.debug msg else console.log msg
 
 		# Loop over all functions/actions within a group
 		action.apply action, args for action in list
@@ -218,7 +224,7 @@ class MiniEventEmitter
 	trigger: ->
 
 		# Send request along to emit
-		@emit.apply @, arguments
+		@emit.apply this, arguments
 
 		# Return this to allow chaining
 		this
@@ -232,5 +238,6 @@ class MiniEventEmitter
 	else if window
 		window.MiniEventEmitter = MiniEventEmitter
 	else
-		console.warn "Cannot expose MiniEventEmitter"
+		msg = "Cannot expose MiniEventEmitter"
+		if console.warn then console.warn msg else console.log msg
 )()
