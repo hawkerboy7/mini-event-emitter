@@ -48,7 +48,11 @@ MiniEventEmitter = (function() {
     if (id === 9) {
       msg += "Event \"" + event + "\" does not exist in group \"" + group + "\"";
     }
-    console.warn(msg);
+    if (console.warn) {
+      console.warn(msg);
+    } else {
+      console.log(msg);
+    }
     return self;
   };
 
@@ -170,7 +174,7 @@ MiniEventEmitter = (function() {
   };
 
   MiniEventEmitter.prototype.emit = function() {
-    var action, args, event, i, len, list;
+    var action, args, event, i, len, list, msg;
     args = Array.from(arguments);
     event = args.shift();
     if (!event) {
@@ -183,7 +187,12 @@ MiniEventEmitter = (function() {
       return error(this, 'emit', 4, event);
     }
     if (this.settings.trace) {
-      console.debug("MiniEventEmitter ~ trace ~ " + event);
+      msg = "MiniEventEmitter ~ trace ~ " + event;
+      if (console.debug) {
+        console.debug(msg);
+      } else {
+        console.log(msg);
+      }
     }
     for (i = 0, len = list.length; i < len; i++) {
       action = list[i];
@@ -202,11 +211,17 @@ MiniEventEmitter = (function() {
 })();
 
 (function() {
+  var msg;
   if ((typeof module !== "undefined" && module !== null) && module.exports) {
     return module.exports = MiniEventEmitter;
   } else if (window) {
     return window.MiniEventEmitter = MiniEventEmitter;
   } else {
-    return console.warn("Cannot expose MiniEventEmitter");
+    msg = "Cannot expose MiniEventEmitter";
+    if (console.warn) {
+      return console.warn(msg);
+    } else {
+      return console.log(msg);
+    }
   }
 })();
