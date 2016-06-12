@@ -57,7 +57,7 @@ class MiniEventEmitter
 
 
 	# Actually emit | a higher scope was required
-	emit = ({self, emit, args, src}) ->
+	_emit = ({self, event, args, internal}) ->
 
 		# Event was not provided
 		return error self, 'emit', 3 if not event
@@ -68,7 +68,7 @@ class MiniEventEmitter
 		# Event name doesn't exist
 		return error self, 'emit', 4, event if not list = @events[event]
 
-		if @settings.worker
+		if @settings.worker and internal
 
 			# Send along request to
 			@worker.postMessage JSON.stringify
@@ -267,9 +267,10 @@ class MiniEventEmitter
 
 		# Pass the emit along to the actual emit function
 		return _emit
-			self  : this
-			args  : args
-			event : event
+			self     : this
+			args     : args
+			event    : event
+			internal : false
 
 
 	trigger: ->
