@@ -9,6 +9,7 @@ class MiniEventEmitter
 	objLength = (obj) -> Object.keys(obj).length
 	isFunction = (fn) -> typeof fn is 'function'
 
+
 	# Handling all error's
 	error = (self, name, id, event, group) ->
 
@@ -34,6 +35,7 @@ class MiniEventEmitter
 		# Return this/self to allow chaining
 		self
 
+
 	# Make group optional
 	check = (group, fn) ->
 
@@ -54,18 +56,85 @@ class MiniEventEmitter
 		[group, fn]
 
 
+	# Actually emit | a higher scope was required
+	emit = ({self, emit, args, src}) ->
+
+		# Event was not provided
+		return error self, 'emit', 3 if not event
+
+		# Event name must be a string
+		return error self, 'emit', 1 if not isString event
+
+		# Event name doesn't exist
+		return error self, 'emit', 4, event if not list = @events[event]
+
+		if @settings.worker
+
+			# Send along request to
+			@worker.postMessage JSON.stringify
+				args  : args
+				event : event
+
+		else
+
+			# If trace is defined by the user it will receive all emited event trough that function
+			if @settings.trace
+
+				# The trace message
+				msg = "MiniEventEmitter ~ trace ~ #{event}"
+
+				# Log the message to the console (as a debug if available)
+				if console.debug then console.debug msg else console.log msg
+
+			# Loop over all functions/actions within a group
+			action.apply action, args for action in list
+
+
+		# Return this to allow chaining
+		this
+
+
+
+
+
+
+
+
+
 	# --------------------------------------------------
 	# Public functionality
 	# --------------------------------------------------
 	constructor: (obj) ->
 
 		@settings =
-			error : obj?.error
-			trace : obj?.trace
+			error  : obj?.error
+			trace  : obj?.trace
+			worker : obj?.worker
 
 		# Store all events
 		@events = {}
 		@groups = {}
+
+		# Create a webworker if required by setings
+		return if not @settings.worker
+
+		# Create a webworker instance
+		@worker = webworkify @settings.worker
+
+		# Listen for responses comming from the webworker
+		@worker.addEventListener 'message', ({data}) =>
+
+			# Parse response back into the function array
+			args = []; args[i] = arg for i, arg of JSON.parse data
+
+			# Retrieve event name
+			eventName = args.shift()
+
+			# Check if the event exists
+			return console.log "Event: '#{eventName}' not found" if not actions = @events[eventName]
+
+			# Run function with all arguments except for the eventName
+			action.apply action, args for action in actions
 
 
 	on: (event, group, fn) ->
@@ -196,29 +265,11 @@ class MiniEventEmitter
 		# Retrieve event name from the provided arguments
 		event = args.shift()
 
-		# Event was not provided
-		return error this, 'emit', 3 if not event
-
-		# Event name must be a string
-		return error this, 'emit', 1 if not isString event
-
-		# Event name doesn't exist
-		return error this, 'emit', 4, event if not list = @events[event]
-
-		# If tabs is defined by the user it will receive all emited event trough that function
-		if @settings.trace
-
-			# The trace message
-			msg = "MiniEventEmitter ~ trace ~ #{event}"
-
-			# Log the message to the console (as a debug if available)
-			if console.debug then console.debug msg else console.log msg
-
-		# Loop over all functions/actions within a group
-		action.apply action, args for action in list
-
-		# Return this to allow chaining
-		this
+		# Pass the emit along to the actual emit function
+		return _emit
+			self  : this
+			args  : args
+			event : event
 
 
 	trigger: ->
