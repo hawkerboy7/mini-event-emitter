@@ -66,19 +66,19 @@ class MiniEventEmitter
 		return error self, 'emit', 1 if not isString event
 
 		# Event name doesn't exist
-		return error self, 'emit', 4, event if not list = @events[event]
+		return error self, 'emit', 4, event if not list = self.events[event]
 
-		if @settings.worker and internal
+		if self.settings.worker and not internal
 
 			# Send along request to
-			@worker.postMessage JSON.stringify
+			self.worker.postMessage JSON.stringify
 				args  : args
 				event : event
 
 		else
 
 			# If trace is defined by the user it will receive all emited event trough that function
-			if @settings.trace
+			if self.settings.trace
 
 				# The trace message
 				msg = "MiniEventEmitter ~ trace ~ #{event}"
@@ -89,15 +89,8 @@ class MiniEventEmitter
 			# Loop over all functions/actions within a group
 			action.apply action, args for action in list
 
-
 		# Return this to allow chaining
 		this
-
-
-
-
-
-
 
 
 

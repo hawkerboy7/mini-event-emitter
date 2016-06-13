@@ -77,16 +77,16 @@ MiniEventEmitter = (function() {
     if (!isString(event)) {
       return error(self, 'emit', 1);
     }
-    if (!(list = this.events[event])) {
+    if (!(list = self.events[event])) {
       return error(self, 'emit', 4, event);
     }
-    if (this.settings.worker && internal) {
-      this.worker.postMessage(JSON.stringify({
+    if (self.settings.worker && !internal) {
+      self.worker.postMessage(JSON.stringify({
         args: args,
         event: event
       }));
     } else {
-      if (this.settings.trace) {
+      if (self.settings.trace) {
         msg = "MiniEventEmitter ~ trace ~ " + event;
         if (console.debug) {
           console.debug(msg);
