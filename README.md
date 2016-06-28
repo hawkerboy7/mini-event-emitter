@@ -95,7 +95,7 @@ events.emit('test');
 var Events = require('mini-event-emitter');
 
 // Create a new instance of the MiniEventEmitter
-var events = new Events({error: true, trance: true});
+var events = new Events();
 
 // Create some test functions and let all of them be triggerd on the test event
 events.on('test', test1 = function () { console.log('test1'); });
@@ -140,7 +140,7 @@ events.off('test', 'group2');
 // Fire the test event
 events.emit('test');
 
-// No Response / Error message
+// No Response
 ```
 
 
@@ -210,7 +210,7 @@ events.emit('test');
 ### Cases which are probably flaws using any EventEmitter
 The following cases can be recognized by the `MiniEventEmitter` and can be shown to you in the console:
 
-- `.emit` an event which has no listener for it.
+- `.emit` an event which has no listener for it (in the specified group).
 - Using `.emit` without an event name.
 - Using `.off` on an event name that does not exist
 - Using `.off` on an event name that is not inside the provided group
@@ -240,6 +240,4 @@ events.on('test',function(){console.log('test');}).emit('test').off('test');
 
 - Send events to specific groups using `.group`
 - Create a `socket.io` link
-- Create a `webworker` link
 - Add support for require.js / common.js
-- Check all code for possible speed gains: `.push` method possibly replace it with `array[array.length]=value`.
