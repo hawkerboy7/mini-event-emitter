@@ -7,9 +7,9 @@ class MiniEventEmitter
 
 		# Store and define settings
 		@settings =
-			error  : obj?.error
-			trace  : obj?.trace
-			worker : obj?.worker
+			error  : obj?.error || false
+			trace  : obj?.trace || false
+			worker : obj?.worker || null
 
 		# Store all events
 		@events = {}
@@ -26,23 +26,18 @@ class MiniEventEmitter
 		# Listen for responses comming from the webworker
 		@worker.addEventListener 'message', ({data}) =>
 
-			# Parse response back into the function array
-			args = []; args[i] = arg for i, arg of JSON.parse data
-
-			# Retrieve event name
-			eventName = args.shift()
-
-			# Check if the event exists
-			return console.log "Event: '#{eventName}' not found" if not actions = @events[eventName]
-
-			# Run function with all arguments except for the eventName
-			action.apply action, args for action in actions
+			# Pass along to the _emit function
+			_emit
+				self     : this
+				args     : data.args
+				event    : data.event
+				internal : true
 
 
 	on: (event, group, fn) ->
 
 		# Make group optional
-		[group, fn] = check group, fn
+		[group, fn] = optional group, fn
 
 		# Event name must be a string
 		return error this, 'on', 1 if not isString event
@@ -79,7 +74,7 @@ class MiniEventEmitter
 		# Define the actual remove function variables are already know due to the scope the function is in
 		removeFn = =>
 
-			# Loop over all found function in the group
+			# Loop over all found functions in the group
 			for action in actions
 
 				# Get the index of the stored function
@@ -92,7 +87,7 @@ class MiniEventEmitter
 			delete @events[event] if @events[event].length is 0
 
 		# Make group optional
-		[group, fn] = check group, fn
+		[group, fn] = optional group, fn
 
 		# Event name must be a string
 		return error this, 'off', 1 if event and not isString event
@@ -220,7 +215,7 @@ class MiniEventEmitter
 
 
 	# Make group optional
-	check = (group, fn) ->
+	optional = (group, fn) ->
 
 		if not fn? and isFunction group
 
@@ -254,7 +249,7 @@ class MiniEventEmitter
 		if self.settings.worker and not internal
 
 			# Send along request to
-			self.worker.postMessage JSON.stringify
+			self.worker.postMessage
 				args  : args
 				event : event
 

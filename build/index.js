@@ -1,112 +1,13 @@
 var MiniEventEmitter;
 
 MiniEventEmitter = (function() {
-  var _emit, check, error, isFunction, isString, objLength;
-
-  isString = function(event) {
-    return typeof event === 'string' || event instanceof String;
-  };
-
-  objLength = function(obj) {
-    return Object.keys(obj).length;
-  };
-
-  isFunction = function(fn) {
-    return typeof fn === 'function';
-  };
-
-  error = function(self, name, id, event, group) {
-    var msg;
-    if (!self.settings.error) {
-      return self;
-    }
-    msg = "MiniEventEmitter ~ " + name + " ~ ";
-    if (id === 1) {
-      msg += "Event name must be a string";
-    }
-    if (id === 2) {
-      msg += "Provided function to remove with event \"" + event + "\" in group \"" + group + "\" is not found";
-    }
-    if (id === 3) {
-      msg += "Event was not provided";
-    }
-    if (id === 4) {
-      msg += "Event \"" + event + "\" does not exist";
-    }
-    if (id === 5) {
-      msg += "Second param provided with event \"" + event + "\" is not a function";
-    }
-    if (id === 6) {
-      msg += "Group must be a string";
-    }
-    if (id === 7) {
-      msg += "Group \"" + group + "\" doesn't exist for the event \"" + event + "\"";
-    }
-    if (id === 8) {
-      msg += "Group \"" + group + "\" with event \"" + event + "\" does not exists";
-    }
-    if (id === 9) {
-      msg += "Event \"" + event + "\" does not exist in group \"" + group + "\"";
-    }
-    if (console.warn) {
-      console.warn(msg);
-    } else {
-      console.log(msg);
-    }
-    return self;
-  };
-
-  check = function(group, fn) {
-    if ((fn == null) && isFunction(group)) {
-      fn = group;
-      group = '';
-    } else {
-      if (!group) {
-        group = '';
-      }
-    }
-    return [group, fn];
-  };
-
-  _emit = function(arg1) {
-    var action, args, event, internal, j, len, list, msg, self;
-    self = arg1.self, event = arg1.event, args = arg1.args, internal = arg1.internal;
-    if (!event) {
-      return error(self, 'emit', 3);
-    }
-    if (!isString(event)) {
-      return error(self, 'emit', 1);
-    }
-    if (!(list = self.events[event])) {
-      return error(self, 'emit', 4, event);
-    }
-    if (self.settings.worker && !internal) {
-      self.worker.postMessage(JSON.stringify({
-        args: args,
-        event: event
-      }));
-    } else {
-      if (self.settings.trace) {
-        msg = "MiniEventEmitter ~ trace ~ " + event;
-        if (console.debug) {
-          console.debug(msg);
-        } else {
-          console.log(msg);
-        }
-      }
-      for (j = 0, len = list.length; j < len; j++) {
-        action = list[j];
-        action.apply(action, args);
-      }
-    }
-    return this;
-  };
+  var _emit, error, isFunction, isString, objLength, optional;
 
   function MiniEventEmitter(obj) {
     this.settings = {
-      error: obj != null ? obj.error : void 0,
-      trace: obj != null ? obj.trace : void 0,
-      worker: obj != null ? obj.worker : void 0
+      error: (obj != null ? obj.error : void 0) || false,
+      trace: (obj != null ? obj.trace : void 0) || false,
+      worker: (obj != null ? obj.worker : void 0) || null
     };
     this.events = {};
     this.groups = {};
@@ -115,32 +16,22 @@ MiniEventEmitter = (function() {
     }
     this.worker = webworkify(this.settings.worker);
     this.worker.addEventListener('message', (function(_this) {
-      return function(arg1) {
-        var action, actions, arg, args, data, eventName, i, j, len, ref, results;
-        data = arg1.data;
-        args = [];
-        ref = JSON.parse(data);
-        for (i in ref) {
-          arg = ref[i];
-          args[i] = arg;
-        }
-        eventName = args.shift();
-        if (!(actions = _this.events[eventName])) {
-          return console.log("Event: '" + eventName + "' not found");
-        }
-        results = [];
-        for (j = 0, len = actions.length; j < len; j++) {
-          action = actions[j];
-          results.push(action.apply(action, args));
-        }
-        return results;
+      return function(arg) {
+        var data;
+        data = arg.data;
+        return _emit({
+          self: _this,
+          args: data.args,
+          event: data.event,
+          internal: true
+        });
       };
     })(this));
   }
 
   MiniEventEmitter.prototype.on = function(event, group, fn) {
     var ref;
-    ref = check(group, fn), group = ref[0], fn = ref[1];
+    ref = optional(group, fn), group = ref[0], fn = ref[1];
     if (!isString(event)) {
       return error(this, 'on', 1);
     }
@@ -172,9 +63,9 @@ MiniEventEmitter = (function() {
     var actions, index1, index2, ref, ref1, removeFn;
     removeFn = (function(_this) {
       return function() {
-        var action, index, j, len;
-        for (j = 0, len = actions.length; j < len; j++) {
-          action = actions[j];
+        var action, i, index, len;
+        for (i = 0, len = actions.length; i < len; i++) {
+          action = actions[i];
           index = _this.events[event].indexOf(action);
           _this.events[event].splice(index, 1);
         }
@@ -183,12 +74,12 @@ MiniEventEmitter = (function() {
         }
       };
     })(this);
-    ref = check(group, fn), group = ref[0], fn = ref[1];
+    ref = optional(group, fn), group = ref[0], fn = ref[1];
     if (event && !isString(event)) {
       return error(this, 'off', 1);
     }
     if (!isString(group)) {
-      return error(this, 'on', 6);
+      return error(this, 'off', 6);
     }
     if (fn && !isFunction(fn)) {
       return error(this, 'off', 5, event);
@@ -248,6 +139,105 @@ MiniEventEmitter = (function() {
 
   MiniEventEmitter.prototype.trigger = function() {
     this.emit.apply(this, arguments);
+    return this;
+  };
+
+  isString = function(event) {
+    return typeof event === 'string' || event instanceof String;
+  };
+
+  objLength = function(obj) {
+    return Object.keys(obj).length;
+  };
+
+  isFunction = function(fn) {
+    return typeof fn === 'function';
+  };
+
+  error = function(self, name, id, event, group) {
+    var msg;
+    if (!self.settings.error) {
+      return self;
+    }
+    msg = "MiniEventEmitter ~ " + name + " ~ ";
+    if (id === 1) {
+      msg += "Event name must be a string";
+    }
+    if (id === 2) {
+      msg += "Provided function to remove with event \"" + event + "\" in group \"" + group + "\" is not found";
+    }
+    if (id === 3) {
+      msg += "Event was not provided";
+    }
+    if (id === 4) {
+      msg += "Event \"" + event + "\" does not exist";
+    }
+    if (id === 5) {
+      msg += "Second param provided with event \"" + event + "\" is not a function";
+    }
+    if (id === 6) {
+      msg += "Group must be a string";
+    }
+    if (id === 7) {
+      msg += "Group \"" + group + "\" doesn't exist for the event \"" + event + "\"";
+    }
+    if (id === 8) {
+      msg += "Group \"" + group + "\" with event \"" + event + "\" does not exists";
+    }
+    if (id === 9) {
+      msg += "Event \"" + event + "\" does not exist in group \"" + group + "\"";
+    }
+    if (console.warn) {
+      console.warn(msg);
+    } else {
+      console.log(msg);
+    }
+    return self;
+  };
+
+  optional = function(group, fn) {
+    if ((fn == null) && isFunction(group)) {
+      fn = group;
+      group = '';
+    } else {
+      if (!group) {
+        group = '';
+      }
+    }
+    return [group, fn];
+  };
+
+  _emit = function(arg) {
+    var action, args, event, i, internal, len, list, msg, self;
+    self = arg.self, event = arg.event, args = arg.args, internal = arg.internal;
+    if (!event) {
+      return error(self, 'emit', 3);
+    }
+    if (!isString(event)) {
+      return error(self, 'emit', 1);
+    }
+    if (!(list = self.events[event])) {
+      return error(self, 'emit', 4, event);
+    }
+    if (self.settings.worker && !internal) {
+      self.worker.postMessage({
+        args: args,
+        event: event
+      });
+    } else {
+      if (self.settings.trace) {
+        msg = "MiniEventEmitter ~ trace ~ " + event;
+        if (console.debug) {
+          console.debug(msg);
+        } else {
+          console.log(msg);
+        }
+      }
+      for (i = 0, len = list.length; i < len; i++) {
+        action = list[i];
+        action.apply(action, args);
+      }
+    }
     return this;
   };
 
