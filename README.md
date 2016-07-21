@@ -236,8 +236,7 @@ events.on('test',function(){console.log('test');}).emit('test').off('test');
 ```
 
 
-## Planned Features - Performance optimizers
+## Planned Features
 
 - Send events to specific groups using `.group`
-- Create a `socket.io` link
 - Add support for require.js / common.js

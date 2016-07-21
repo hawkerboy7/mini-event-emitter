@@ -19,11 +19,12 @@
   "keywords": [
     "log",
     "event",
-    "trace",
     "smart",
+    "trace",
     "events",
-    "logging",
     "emitter",
+    "logging",
+    "verbose",
     "eventemitter",
     "event-emitter"
   ]
