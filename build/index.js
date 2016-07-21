@@ -238,7 +238,7 @@ MiniEventEmitter = (function() {
         action.apply(action, args);
       }
     }
-    return this;
+    return self;
   };
 
   return MiniEventEmitter;

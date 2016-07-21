@@ -267,8 +267,8 @@ class MiniEventEmitter
 			# Loop over all functions/actions within a group
 			action.apply action, args for action in list
 
-		# Return this to allow chaining
-		this
+		# Return this (self) to allow chaining
+		self
 
 
 # --------------------------------------------------
