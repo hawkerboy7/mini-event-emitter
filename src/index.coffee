@@ -1,114 +1,23 @@
 class MiniEventEmitter
 
 	# --------------------------------------------------
-	# Private functionality
-	# --------------------------------------------------
-
-	# Shortcuts
-	isString = (event) -> typeof event is 'string' or event instanceof String
-	objLength = (obj) -> Object.keys(obj).length
-	isFunction = (fn) -> typeof fn is 'function'
-
-
-	# Handling all error's
-	error = (self, name, id, event, group) ->
-
-		# Only log the message if they are required
-		return self if not self.settings.error
-
-		# Prefix all error messages with the MiniEventEmitter text
-		msg = "MiniEventEmitter ~ #{name} ~ "
-
-		if id is 1 then msg += "Event name must be a string"
-		if id is 2 then msg += "Provided function to remove with event \"#{event}\" in group \"#{group}\" is not found"
-		if id is 3 then msg += "Event was not provided"
-		if id is 4 then msg += "Event \"#{event}\" does not exist"
-		if id is 5 then msg += "Second param provided with event \"#{event}\" is not a function"
-		if id is 6 then msg += "Group must be a string"
-		if id is 7 then msg += "Group \"#{group}\" doesn't exist for the event \"#{event}\""
-		if id is 8 then msg += "Group \"#{group}\" with event \"#{event}\" does not exists"
-		if id is 9 then msg += "Event \"#{event}\" does not exist in group \"#{group}\""
-
-		# Log the message to the console (as a warning if available)
-		if console.warn then console.warn msg else console.log msg
-
-		# Return this/self to allow chaining
-		self
-
-
-	# Make group optional
-	check = (group, fn) ->
-
-		if not fn? and isFunction group
-
-			# group must contain the callback function so set it correctly
-			fn = group
-
-			# Unset the group
-			group = ''
-
-		else
-
-			# Make sure the group is a string
-			group = '' if not group
-
-		# Return new group and function
-		[group, fn]
-
-
-	# Actually emit | a higher scope was required
-	_emit = ({self, event, args, internal}) ->
-
-		# Event was not provided
-		return error self, 'emit', 3 if not event
-
-		# Event name must be a string
-		return error self, 'emit', 1 if not isString event
-
-		# Event name doesn't exist
-		return error self, 'emit', 4, event if not list = self.events[event]
-
-		if self.settings.worker and not internal
-
-			# Send along request to
-			self.worker.postMessage JSON.stringify
-				args  : args
-				event : event
-
-		else
-
-			# If trace is defined by the user it will receive all emited event trough that function
-			if self.settings.trace
-
-				# The trace message
-				msg = "MiniEventEmitter ~ trace ~ #{event}"
-
-				# Log the message to the console (as a debug if available)
-				if console.debug then console.debug msg else console.log msg
-
-			# Loop over all functions/actions within a group
-			action.apply action, args for action in list
-
-		# Return this to allow chaining
-		this
-
-
-
-	# --------------------------------------------------
 	# Public functionality
 	# --------------------------------------------------
 	constructor: (obj) ->
 
+		# Store and define settings
 		@settings =
-			error  : obj?.error
-			trace  : obj?.trace
-			worker : obj?.worker
+			error  : obj?.error || false
+			trace  : obj?.trace || false
+			worker : obj?.worker || null
 
 		# Store all events
 		@events = {}
+
+		# Store all groups
 		@groups = {}
 
-		# Create a webworker if required by setings
+		# Create a webworker if required
 		return if not @settings.worker
 
 		# Create a webworker instance
@@ -117,32 +26,27 @@ class MiniEventEmitter
 		# Listen for responses comming from the webworker
 		@worker.addEventListener 'message', ({data}) =>
 
-			# Parse response back into the function array
-			args = []; args[i] = arg for i, arg of JSON.parse data
-
-			# Retrieve event name
-			eventName = args.shift()
-
-			# Check if the event exists
-			return console.log "Event: '#{eventName}' not found" if not actions = @events[eventName]
-
-			# Run function with all arguments except for the eventName
-			action.apply action, args for action in actions
+			# Pass along to the _emit function
+			_emit
+				self     : this
+				args     : data.args
+				event    : data.event
+				internal : true
 
 
 	on: (event, group, fn) ->
 
 		# Make group optional
-		[group, fn] = check group, fn
+		[group, fn] = optional group, fn
 
 		# Event name must be a string
 		return error this, 'on', 1 if not isString event
 
 		# Group must be a string
-		return error this, 'on', 6 if not isString group
+		return error this, 'on', 5 if not isString group
 
 		# Fn must be a function
-		return error this, 'on', 5, event if not isFunction fn
+		return error this, 'on', 6, event, group if not isFunction fn
 
 		# Check if the provided group exists
 		if @groups[group]
@@ -170,7 +74,7 @@ class MiniEventEmitter
 		# Define the actual remove function variables are already know due to the scope the function is in
 		removeFn = =>
 
-			# Loop over all found function in the group
+			# Loop over all found functions in the group
 			for action in actions
 
 				# Get the index of the stored function
@@ -183,19 +87,19 @@ class MiniEventEmitter
 			delete @events[event] if @events[event].length is 0
 
 		# Make group optional
-		[group, fn] = check group, fn
+		[group, fn] = optional group, fn
 
 		# Event name must be a string
 		return error this, 'off', 1 if event and not isString event
 
 		# Group must be a string
-		return error this, 'on', 6 if not isString group
+		return error this, 'off', 5 if not isString group
 
 		# Fn must be a function
-		return error this, 'off', 5, event if fn and not isFunction fn
+		return error this, 'off', 6, event, group if fn and not isFunction fn
 
-		# Provided group must exist
-		return error this, 'off', 8, event, group if not @groups[group]
+		# Provided group doesn't have events
+		return error this, 'off', 7, event, group if event and not @groups[group]
 
 		if not event
 
@@ -274,10 +178,102 @@ class MiniEventEmitter
 		# Return this to allow chaining
 		this
 
+	# --------------------------------------------------
+	# Private functionality
+	# --------------------------------------------------
+
+	# Shortcuts
+	isString = (event) -> typeof event is 'string' or event instanceof String
+	objLength = (obj) -> Object.keys(obj).length
+	isFunction = (fn) -> typeof fn is 'function'
 
 
-# Export for browserify or simple browser
-(->
+	# Handling all error's
+	error = (self, name, id, event, group) ->
+
+		# Only log the message if they are required
+		return self if not self.settings.error
+
+		# Prefix all error messages with the MiniEventEmitter text
+		msg = "MiniEventEmitter ~ #{name} ~ "
+
+		if id is 1 then msg += "Event name must be a string"
+		if id is 2 then msg += "Provided function to remove with event \"#{event}\" in group \"#{group}\" is not found"
+		if id is 3 then msg += "Event was not provided"
+		if id is 4 then msg += "Event \"#{event}\" does not exist"
+		if id is 5 then msg += "Provided group must be a string"
+		if id is 6 then msg += "The last param provided with event \"#{event}\" and group \"#{group}\" is expected to be a function"
+		if id is 7 then msg += "Provided Group \"#{group}\" doesn't have any events"
+
+		# Log the message to the console (as a warning if available)
+		if console.warn then console.warn msg else console.log msg
+
+		# Return this/self to allow chaining
+		self
+
+
+	# Make group optional
+	optional = (group, fn) ->
+
+		if not fn? and isFunction group
+
+			# group must contain the callback function so set it correctly
+			fn = group
+
+			# Unset the group
+			group = ''
+
+		else
+
+			# Make sure the group is a string
+			group = '' if not group
+
+		# Return new group and function
+		[group, fn]
+
+
+	# Actually emit | a higher scope was required
+	_emit = ({self, event, args, internal}) ->
+
+		# Event was not provided
+		return error self, 'emit', 3 if not event
+
+		# Event name must be a string
+		return error self, 'emit', 1 if not isString event
+
+		# Event name doesn't exist
+		return error self, 'emit', 4, event if not list = self.events[event]
+
+		if self.settings.worker and not internal
+
+			# Send along request to
+			self.worker.postMessage
+				args  : args
+				event : event
+
+		else
+
+			# If trace is defined by the user it will receive all emited event trough that function
+			if self.settings.trace
+
+				# The trace message
+				msg = "MiniEventEmitter ~ trace ~ #{event}"
+
+				# Log the message to the console (as a debug if available)
+				if console.debug then console.debug msg else console.log msg
+
+			# Loop over all functions/actions within a group
+			action.apply action, args for action in list
+
+		# Return this (self) to allow chaining
+		self
+
+
+# --------------------------------------------------
+# Exposing | Browserify or Simple Browser
+# --------------------------------------------------
+
+do ->
 	if module? && module.exports
 		module.exports = MiniEventEmitter
 	else if window
@@ -285,4 +281,3 @@ class MiniEventEmitter
 	else
 		msg = "Cannot expose MiniEventEmitter"
 		if console.warn then console.warn msg else console.log msg
-)()
