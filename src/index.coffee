@@ -43,10 +43,10 @@ class MiniEventEmitter
 		return error this, 'on', 1 if not isString event
 
 		# Group must be a string
-		return error this, 'on', 6 if not isString group
+		return error this, 'on', 5 if not isString group
 
 		# Fn must be a function
-		return error this, 'on', 5, event if not isFunction fn
+		return error this, 'on', 6, event, group if not isFunction fn
 
 		# Check if the provided group exists
 		if @groups[group]
@@ -93,13 +93,13 @@ class MiniEventEmitter
 		return error this, 'off', 1 if event and not isString event
 
 		# Group must be a string
-		return error this, 'off', 6 if not isString group
+		return error this, 'off', 5 if not isString group
 
 		# Fn must be a function
-		return error this, 'off', 5, event if fn and not isFunction fn
+		return error this, 'off', 6, event, group if fn and not isFunction fn
 
-		# Provided group must exist
-		return error this, 'off', 8, event, group if not @groups[group]
+		# Provided group doesn't have events
+		return error this, 'off', 7, event, group if event and not @groups[group]
 
 		if not event
 
@@ -201,11 +201,9 @@ class MiniEventEmitter
 		if id is 2 then msg += "Provided function to remove with event \"#{event}\" in group \"#{group}\" is not found"
 		if id is 3 then msg += "Event was not provided"
 		if id is 4 then msg += "Event \"#{event}\" does not exist"
-		if id is 5 then msg += "Second param provided with event \"#{event}\" is not a function"
-		if id is 6 then msg += "Group must be a string"
-		if id is 7 then msg += "Group \"#{group}\" doesn't exist for the event \"#{event}\""
-		if id is 8 then msg += "Group \"#{group}\" with event \"#{event}\" does not exists"
-		if id is 9 then msg += "Event \"#{event}\" does not exist in group \"#{group}\""
+		if id is 5 then msg += "Provided group must be a string"
+		if id is 6 then msg += "The last param provided with event \"#{event}\" and group \"#{group}\" is expected to be a function"
+		if id is 7 then msg += "Provided Group \"#{group}\" doesn't have any events"
 
 		# Log the message to the console (as a warning if available)
 		if console.warn then console.warn msg else console.log msg

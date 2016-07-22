@@ -36,10 +36,10 @@ MiniEventEmitter = (function() {
       return error(this, 'on', 1);
     }
     if (!isString(group)) {
-      return error(this, 'on', 6);
+      return error(this, 'on', 5);
     }
     if (!isFunction(fn)) {
-      return error(this, 'on', 5, event);
+      return error(this, 'on', 6, event, group);
     }
     if (this.groups[group]) {
       if (this.groups[group][event]) {
@@ -79,13 +79,13 @@ MiniEventEmitter = (function() {
       return error(this, 'off', 1);
     }
     if (!isString(group)) {
-      return error(this, 'off', 6);
+      return error(this, 'off', 5);
     }
     if (fn && !isFunction(fn)) {
-      return error(this, 'off', 5, event);
+      return error(this, 'off', 6, event, group);
     }
-    if (!this.groups[group]) {
-      return error(this, 'off', 8, event, group);
+    if (event && !this.groups[group]) {
+      return error(this, 'off', 7, event, group);
     }
     if (!event) {
       ref1 = this.groups[group];
@@ -173,19 +173,13 @@ MiniEventEmitter = (function() {
       msg += "Event \"" + event + "\" does not exist";
     }
     if (id === 5) {
-      msg += "Second param provided with event \"" + event + "\" is not a function";
+      msg += "Provided group must be a string";
     }
     if (id === 6) {
-      msg += "Group must be a string";
+      msg += "The last param provided with event \"" + event + "\" and group \"" + group + "\" is expected to be a function";
     }
     if (id === 7) {
-      msg += "Group \"" + group + "\" doesn't exist for the event \"" + event + "\"";
-    }
-    if (id === 8) {
-      msg += "Group \"" + group + "\" with event \"" + event + "\" does not exists";
-    }
-    if (id === 9) {
-      msg += "Event \"" + event + "\" does not exist in group \"" + group + "\"";
+      msg += "Provided Group \"" + group + "\" doesn't have any events";
     }
     if (console.warn) {
       console.warn(msg);
