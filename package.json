@@ -1,6 +1,6 @@
 {
   "name": "mini-event-emitter",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "An easy javascript EventEmitter which has no dependencies and the possibility to log errors and trace events",
   "main": "build/index.js",
   "author": "Dexter Esajas <dexter.esajas@gmail.com>",
