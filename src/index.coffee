@@ -270,14 +270,11 @@ class MiniEventEmitter
 
 
 # --------------------------------------------------
-# Exposing | Browserify or Simple Browser
+# Expose
 # --------------------------------------------------
 
-do ->
-	if module? && module.exports
-		module.exports = MiniEventEmitter
-	else if window
-		window.MiniEventEmitter = MiniEventEmitter
-	else
-		msg = "Cannot expose MiniEventEmitter"
-		if console.warn then console.warn msg else console.log msg
+# Require | Browserify, Node
+module.exports = MiniEventEmitter
+
+# Distribution | Browser
+# window.MiniEventEmitter = MiniEventEmitter

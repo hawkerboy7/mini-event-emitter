@@ -239,4 +239,4 @@ MiniEventEmitter = (function() {
 
 })();
 
-module.exports = MiniEventEmitter;
+window.MiniEventEmitter = MiniEventEmitter;
