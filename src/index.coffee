@@ -20,11 +20,14 @@ class MiniEventEmitter
 		# Create a webworker if required
 		return if not @settings.worker
 
-		# Create a webworker instance
+		# Check if webworkify is defined in the DOM or passed along in the constructor
+		return if not webworkify and not webworkify = obj?.webworkify
+
+		# Create a webworker instance if webworkify is defined in the DOM or provided
 		@worker = webworkify @settings.worker
 
 		# Listen for responses comming from the webworker
-		@worker.addEventListener 'message', ({data}) =>
+		@worker.addEventListener "message", ({data}) =>
 
 			# Pass along to the _emit function
 			_emit
@@ -40,13 +43,13 @@ class MiniEventEmitter
 		[group, fn] = optional group, fn
 
 		# Event name must be a string
-		return error this, 'on', 1 if not isString event
+		return error this, "on", 1 if not isString event
 
 		# Group must be a string
-		return error this, 'on', 5 if not isString group
+		return error this, "on", 5 if not isString group
 
 		# Fn must be a function
-		return error this, 'on', 6, event, group if not isFunction fn
+		return error this, "on", 6, event, group if not isFunction fn
 
 		# Check if the provided group exists
 		if @groups[group]
@@ -90,16 +93,16 @@ class MiniEventEmitter
 		[group, fn] = optional group, fn
 
 		# Event name must be a string
-		return error this, 'off', 1 if event and not isString event
+		return error this, "off", 1 if event and not isString event
 
 		# Group must be a string
-		return error this, 'off', 5 if not isString group
+		return error this, "off", 5 if not isString group
 
 		# Fn must be a function
-		return error this, 'off', 6, event, group if fn and not isFunction fn
+		return error this, "off", 6, event, group if fn and not isFunction fn
 
-		# Provided group doesn't have events
-		return error this, 'off', 7, event, group if event and not @groups[group]
+		# Provided group does not have events
+		return error this, "off", 7, event, group if event and not @groups[group]
 
 		if not event
 
@@ -112,8 +115,8 @@ class MiniEventEmitter
 			# Return this to allow chaining
 			return this
 
-		# Event name doesn't exist for this group
-		return error this, 'off', 4, event, group if not actions = @groups[group][event]
+		# Event name does not exist for this group
+		return error this, "off", 4, event, group if not actions = @groups[group][event]
 
 		# Check if a function to be removed is defined
 		if not fn
@@ -130,7 +133,7 @@ class MiniEventEmitter
 			# Return this to allow chaining
 			return this
 
-		return error this, 'off', 2, event, group if -1 is index1 = actions.indexOf fn
+		return error this, "off", 2, event, group if -1 is index1 = actions.indexOf fn
 
 		# Remove function from groups list
 		actions.splice index1, 1
@@ -183,12 +186,12 @@ class MiniEventEmitter
 	# --------------------------------------------------
 
 	# Shortcuts
-	isString = (event) -> typeof event is 'string' or event instanceof String
+	isString = (event) -> typeof event is "string" or event instanceof String
 	objLength = (obj) -> Object.keys(obj).length
-	isFunction = (fn) -> typeof fn is 'function'
+	isFunction = (fn) -> typeof fn is "function"
 
 
-	# Handling all error's
+	# Handling all errors
 	error = (self, name, id, event, group) ->
 
 		# Only log the message if they are required
@@ -200,13 +203,13 @@ class MiniEventEmitter
 		if id is 1 then msg += "Event name must be a string"
 		if id is 2 then msg += "Provided function to remove with event \"#{event}\" in group \"#{group}\" is not found"
 		if id is 3 then msg += "Event was not provided"
-		if id is 4 then msg += "Event \"#{event}\" does not exist"
+		if id is 4 then msg += "EventListener for event \"#{event}\" does not exist"
 		if id is 5 then msg += "Provided group must be a string"
 		if id is 6 then msg += "The last param provided with event \"#{event}\" and group \"#{group}\" is expected to be a function"
-		if id is 7 then msg += "Provided Group \"#{group}\" doesn't have any events"
+		if id is 7 then msg += "Provided Group \"#{group}\" does not have any events"
 
 		# Log the message to the console (as a warning if available)
-		if console.warn then console.warn msg else console.log msg
+		if console then (if console.warn then console.warn msg else console.log msg)
 
 		# Return this/self to allow chaining
 		self
@@ -221,12 +224,12 @@ class MiniEventEmitter
 			fn = group
 
 			# Unset the group
-			group = ''
+			group = ""
 
 		else
 
 			# Make sure the group is a string
-			group = '' if not group
+			group = "" if not group
 
 		# Return new group and function
 		[group, fn]
@@ -236,13 +239,13 @@ class MiniEventEmitter
 	_emit = ({self, event, args, internal}) ->
 
 		# Event was not provided
-		return error self, 'emit', 3 if not event
+		return error self, "emit", 3 if not event
 
 		# Event name must be a string
-		return error self, 'emit', 1 if not isString event
+		return error self, "emit", 1 if not isString event
 
-		# Event name doesn't exist
-		return error self, 'emit', 4, event if not list = self.events[event]
+		# Event name does not exist
+		return error self, "emit", 4, event if not list = self.events[event]
 
 		if self.settings.worker and not internal
 

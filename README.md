@@ -22,16 +22,17 @@
 
 
 ## What is it?
-The `mini-event-emitter` is an easy lightweight javascript EventEmitter which has no dependencies.
+The `MiniEventEmitter` is an easy lightweight javascript EventEmitter which has no dependencies.
 Using the `MiniEventEmitter` you can easily create new instaces.
 This way you can create multiple `MiniEventEmitters` with isolated events.
 It also has the ability to show you a log message in case you do something that does not make sense.
 This should help you as a developer to debug your code faster and help you check for gost events.
 
-As of version `0.3.0` you have the possibility to add a group to an event and eventListener.
-So later in your code you can remove events and eventListeners bound to a specific group (e.g. a DOM element).
+You have the possibility to add a group to an event.
+This way you can remove events and eventListeners bound to a specific group (e.g. a DOM element).
 Using `.emit()` events will be send to all groups.
-Also the `.trigger()` is introduced which does the exact same thing as `.emit()` but some people prefer `.trigger()` over `.emit()` so now you can choose.
+Also the `.trigger()` is available which does the exact same thing as `.emit()`.
+Some people prefer `.trigger()` over `.emit()` so now you can choose.
 
 
 ## Getting Started
@@ -39,106 +40,111 @@ Also the `.trigger()` is introduced which does the exact same thing as `.emit()`
 ### Simple example
 ```javascript
 // Require the MiniEventEmitter
-var Events = require('mini-event-emitter');
+var Events = require("mini-event-emitter");
 
 // Create a new instance of the MiniEventEmitter
 var events = new Events();
 
-// Listen for the 'test' event and fire an anonymous function
-// that does a console.log of all provided arguments
-events.on('test', function () { console.log(arguments); });
+// Listen for the "test" event and fire an anonymous function
+events.on("test", function () { console.log(JSON.stringify(arguments)); });
 
 // Fire the test event with some example arguments
-events.emit('test', 4, 'hello', [1,'2'[3]], {a:1,b:2,c:{d:3,e:4}});
+events.emit("test", 4, "hello", [1,"2",[3]], {a:1,b:2,c:{d:3,e:4}});
 
-// Remove all 'test' eventListeners
-events.off('test');
+// Fire the test event
+events.emit("test");
 
-// Wo not fire because all 'test' eventListeners have been removed
-events.emit('test');
+// Response: {"0":4,"1":"hello","2":[1,"2",[3]],"3":{"a":1,"b":2,"c":{"d":3,"e":4}}}
+
+// Remove all "test" eventListeners
+events.off("test");
+
+// Will not fire because all "test" eventListeners have been removed
+events.emit("test");
 ```
 
 
 ### Removing specific listener functions
 ```javascript
 // Require the MiniEventEmitter
-var Events = require('mini-event-emitter');
+var Events = require("mini-event-emitter");
 
 // Create a new instance of the MiniEventEmitter
 var events = new Events();
 
 // Create some test functions and let all of them be triggerd on the test event
-events.on('test', test1 = function () { console.log('test1'); });
-events.on('test', test2 = function () { console.log('test2'); });
-events.on('test', test3 = function () { console.log('test3'); });
-events.on('test', test4 = function () { console.log('test4'); });
+events.on("test", test1 = function () { console.log("test1"); });
+events.on("test", test2 = function () { console.log("test2"); });
+events.on("test", test3 = function () { console.log("test3"); });
+events.on("test", test4 = function () { console.log("test4"); });
 
 // Fire the test event
-events.emit('test');
+events.emit("test");
 
-// Response: 'test1', 'test2', 'test3', 'test4'
+// Response: "test1", "test2", "test3", "test4"
 
-// Remove specific 'test' eventListeners by providing the references to the functions
-events.off('test',test2);
-events.off('test',test3);
+// Remove specific "test" eventListeners by providing the references to the functions
+events.off("test",test2);
+events.off("test",test3);
 
 // Fire the test event
-events.emit('test');
+events.emit("test");
 
-// Response: 'test1', 'test4'
+// Response: "test1", "test4"
 ```
 
 
 ### Using groups
 ```javascript
 // Require the MiniEventEmitter
-var Events = require('mini-event-emitter');
+var Events = require("mini-event-emitter");
 
 // Create a new instance of the MiniEventEmitter
 var events = new Events();
 
 // Create some test functions and let all of them be triggerd on the test event
-events.on('test', test1 = function () { console.log('test1'); });
-events.on('test', test2 = function () { console.log('test2'); });
-events.on('test', 'group1', test3 = function () { console.log('test3'); });
-events.on('test', 'group1', test4 = function () { console.log('test4'); });
-events.on('test', 'group2', test5 = function () { console.log('test5'); });
-events.on('test', 'group2', test6 = function () { console.log('test6'); });
+events.on("test", test1 = function () { console.log("test1"); });
+events.on("test", test2 = function () { console.log("test2"); });
+events.on("test", "group1", test3 = function () { console.log("test3"); });
+events.on("test", "group1", test4 = function () { console.log("test4"); });
+events.on("test", "group2", test5 = function () { console.log("test5"); });
+events.on("test", "group2", test6 = function () { console.log("test6"); });
 
 // Fire the test event
-events.emit('test');
+events.emit("test");
 
-// Response: 'test1', 'test2', 'test3', 'test4', 'test5', 'test6'
+// Response: "test1", "test2", "test3", "test4", "test5", "test6"
 
 // Remove a complete group
-events.off('test','group1');
+events.off("test","group1");
 
 // Fire the test event
-events.emit('test');
+events.emit("test");
 
-// Response: 'test1', 'test2', 'test5', 'test6'
+// Response: "test1", "test2", "test5", "test6"
 
 // Remove a specific function within a group
-events.off('test','group2', test5);
+events.off("test","group2", test5);
 
 // Fire the test event
-events.emit('test');
+events.emit("test");
 
-// Response: 'test1', 'test2', 'test6'
+// Response: "test1", "test2", "test6"
 
-// Pay attention: This will remove all test events WITHOUT a group, in this case that means 'group2' function test6 will still fire with the test event
-events.off('test');
-
-// Fire the test event
-events.emit('test');
-
-// Response: 'test6'
-
-// Remove all functions in 'group2' (which only is function test 6)
-events.off('test', 'group2');
+// Pay attention: This will remove all test events WITHOUT a group (or group "").
+// In this case that means "group2" function "test6" will still fire with the test event
+events.off("test");
 
 // Fire the test event
-events.emit('test');
+events.emit("test");
+
+// Response: "test6"
+
+// Remove all functions in "group2" (which at this point only is function test 6)
+events.off("test", "group2");
+
+// Fire the test event
+events.emit("test");
 
 // No Response
 ```
@@ -159,7 +165,7 @@ While running the application you could toggle the `trace` and `error`.
 #### Error example
 ```javascript
 // Require the MiniEventEmitter
-var Events = require('mini-event-emitter');
+var Events = require("mini-event-emitter");
 
 // Create a new instance of the MiniEventEmitter
 var events = new Events({error: true});
@@ -183,38 +189,37 @@ events.emit();
 #### Trace example
 ```javascript
 // Require the MiniEventEmitter
-var Events = require('mini-event-emitter');
+var Events = require("mini-event-emitter");
 
 // Create a new instance of the MiniEventEmitter
 var events = new Events({trace: true});
 
-// All traces of succesfull 'event emits' will be shown in the console
+// All traces of succesfull "event emits" will be shown in the console
 
-// Trigger the emit function without event name
-events.on('test', function () {console.log("test message");});
+// Create an example text event with eventListener
+events.on("test", function () {console.log("test message");});
 
-// Fire the 'test' event
-events.emit('test');
+// Fire the "test" event
+events.emit("test");
 
-// Response: 'MiniEventEmitter ~ trace ~ test', 'test message'
+// Response: "MiniEventEmitter ~ trace ~ test", "test message"
 
 // Turn trace-logging off again
 events.settings.trace = false
 
-// Fire the 'test' event
-events.emit('test');
+// Fire the "test" event
+events.emit("test");
 
-// Response: 'test message'
+// Response: "test message"
 ```
 
 ### Cases which are probably flaws using any EventEmitter
 The following cases can be recognized by the `MiniEventEmitter` and can be shown to you in the console:
 
-- `.emit` an event which has no listener for it (in the specified group).
+- `.emit` an event which has no eventListener for it (in the specified group).
 - Using `.emit` without an event name.
-- Using `.off` on an event name that does not exist
-- Using `.off` on an event name that is not inside the provided group
-- Using `.off` and providing a function that does not exist with the provided event name (and group)
+- Using `.off` on an event name that does not exist (in the specified group)
+- Using `.off` and providing an eventListener that does not exist with the provided event name (and group)
 - Use something other than a sting as event or group name.
 - Use something other than a function as an eventListener.
 
@@ -224,19 +229,13 @@ It is also possible to chain `MiniEventEmitter` methodes.
 
 ```javascript
 // Require the MiniEventEmitter
-var Events = require('mini-event-emitter');
+var Events = require("mini-event-emitter");
 
 // Create a new instance of the MiniEventEmitter
 var events = new Events();
 
-// Chained: add eventListener 'test', trigger the event and remove the event
-events.on('test',function(){console.log('test');}).emit('test').off('test');
+// Chained: add eventListener "test", trigger the event and remove the event
+events.on("test",function(){console.log("test");}).emit("test").off("test");
 
-// Response: 'test'
+// Response: "test"
 ```
-
-
-## Planned Features
-
-- Send events to specific groups using `.group`
-- Add support for require.js / common.js
