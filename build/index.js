@@ -4,6 +4,7 @@ MiniEventEmitter = (function() {
   var _emit, error, isFunction, isString, objLength, optional;
 
   function MiniEventEmitter(obj) {
+    var webworkify;
     this.settings = {
       error: (obj != null ? obj.error : void 0) || false,
       trace: (obj != null ? obj.trace : void 0) || false,
@@ -14,8 +15,11 @@ MiniEventEmitter = (function() {
     if (!this.settings.worker) {
       return;
     }
+    if (!webworkify && !(webworkify = obj != null ? obj.webworkify : void 0)) {
+      return;
+    }
     this.worker = webworkify(this.settings.worker);
-    this.worker.addEventListener('message', (function(_this) {
+    this.worker.addEventListener("message", (function(_this) {
       return function(arg) {
         var data;
         data = arg.data;
@@ -33,13 +37,13 @@ MiniEventEmitter = (function() {
     var ref;
     ref = optional(group, fn), group = ref[0], fn = ref[1];
     if (!isString(event)) {
-      return error(this, 'on', 1);
+      return error(this, "on", 1);
     }
     if (!isString(group)) {
-      return error(this, 'on', 5);
+      return error(this, "on", 5);
     }
     if (!isFunction(fn)) {
-      return error(this, 'on', 6, event, group);
+      return error(this, "on", 6, event, group);
     }
     if (this.groups[group]) {
       if (this.groups[group][event]) {
@@ -76,16 +80,16 @@ MiniEventEmitter = (function() {
     })(this);
     ref = optional(group, fn), group = ref[0], fn = ref[1];
     if (event && !isString(event)) {
-      return error(this, 'off', 1);
+      return error(this, "off", 1);
     }
     if (!isString(group)) {
-      return error(this, 'off', 5);
+      return error(this, "off", 5);
     }
     if (fn && !isFunction(fn)) {
-      return error(this, 'off', 6, event, group);
+      return error(this, "off", 6, event, group);
     }
     if (event && !this.groups[group]) {
-      return error(this, 'off', 7, event, group);
+      return error(this, "off", 7, event, group);
     }
     if (!event) {
       ref1 = this.groups[group];
@@ -97,7 +101,7 @@ MiniEventEmitter = (function() {
       return this;
     }
     if (!(actions = this.groups[group][event])) {
-      return error(this, 'off', 4, event, group);
+      return error(this, "off", 4, event, group);
     }
     if (!fn) {
       removeFn();
@@ -108,7 +112,7 @@ MiniEventEmitter = (function() {
       return this;
     }
     if (-1 === (index1 = actions.indexOf(fn))) {
-      return error(this, 'off', 2, event, group);
+      return error(this, "off", 2, event, group);
     }
     actions.splice(index1, 1);
     if (actions.length === 0) {
@@ -143,7 +147,7 @@ MiniEventEmitter = (function() {
   };
 
   isString = function(event) {
-    return typeof event === 'string' || event instanceof String;
+    return typeof event === "string" || event instanceof String;
   };
 
   objLength = function(obj) {
@@ -151,7 +155,7 @@ MiniEventEmitter = (function() {
   };
 
   isFunction = function(fn) {
-    return typeof fn === 'function';
+    return typeof fn === "function";
   };
 
   error = function(self, name, id, event, group) {
@@ -170,7 +174,7 @@ MiniEventEmitter = (function() {
       msg += "Event was not provided";
     }
     if (id === 4) {
-      msg += "Event \"" + event + "\" does not exist";
+      msg += "EventListener for event \"" + event + "\" does not exist";
     }
     if (id === 5) {
       msg += "Provided group must be a string";
@@ -179,12 +183,14 @@ MiniEventEmitter = (function() {
       msg += "The last param provided with event \"" + event + "\" and group \"" + group + "\" is expected to be a function";
     }
     if (id === 7) {
-      msg += "Provided Group \"" + group + "\" doesn't have any events";
+      msg += "Provided Group \"" + group + "\" does not have any events";
     }
-    if (console.warn) {
-      console.warn(msg);
-    } else {
-      console.log(msg);
+    if (console) {
+      if (console.warn) {
+        console.warn(msg);
+      } else {
+        console.log(msg);
+      }
     }
     return self;
   };
@@ -192,10 +198,10 @@ MiniEventEmitter = (function() {
   optional = function(group, fn) {
     if ((fn == null) && isFunction(group)) {
       fn = group;
-      group = '';
+      group = "";
     } else {
       if (!group) {
-        group = '';
+        group = "";
       }
     }
     return [group, fn];
@@ -205,13 +211,13 @@ MiniEventEmitter = (function() {
     var action, args, event, i, internal, len, list, msg, self;
     self = arg.self, event = arg.event, args = arg.args, internal = arg.internal;
     if (!event) {
-      return error(self, 'emit', 3);
+      return error(self, "emit", 3);
     }
     if (!isString(event)) {
-      return error(self, 'emit', 1);
+      return error(self, "emit", 1);
     }
     if (!(list = self.events[event])) {
-      return error(self, 'emit', 4, event);
+      return error(self, "emit", 4, event);
     }
     if (self.settings.worker && !internal) {
       self.worker.postMessage({
