@@ -263,7 +263,7 @@ class MiniEventEmitter
 				msg = "MiniEventEmitter ~ trace ~ #{event}"
 
 				# Log the message to the console (as a debug if available)
-				if console.debug then console.debug msg else console.log msg
+				if console.debug then console.debug "%c #{msg}", "color: #13d" else console.log msg
 
 			# Loop over all functions/actions within a group
 			action.apply action, args for action in list
