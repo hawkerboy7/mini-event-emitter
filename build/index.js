@@ -228,7 +228,7 @@ MiniEventEmitter = (function() {
       if (self.settings.trace) {
         msg = "MiniEventEmitter ~ trace ~ " + event;
         if (console.debug) {
-          console.debug(msg);
+          console.debug("%c " + msg, "color: #13d");
         } else {
           console.log(msg);
         }
