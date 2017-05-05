@@ -208,7 +208,7 @@ MiniEventEmitter = (function() {
   };
 
   _emit = function(arg) {
-    var action, args, event, i, internal, len, list, msg, self;
+    var action, args, argumenten, event, i, internal, len, list, msg, self;
     self = arg.self, event = arg.event, args = arg.args, internal = arg.internal;
     if (!event) {
       return error(self, "emit", 3);
@@ -227,10 +227,18 @@ MiniEventEmitter = (function() {
     } else {
       if (self.settings.trace) {
         msg = "MiniEventEmitter ~ trace ~ " + event;
-        if (console.debug) {
-          console.log("%c " + msg, "color: #13d");
+        if ((argumenten = args.length === 0 ? null : args)) {
+          if (console.debug) {
+            console.log("%c " + msg, "color: #13d", argumenten);
+          } else {
+            console.log(msg, argumenten);
+          }
         } else {
-          console.log(msg);
+          if (console.debug) {
+            console.log("%c " + msg, "color: #13d");
+          } else {
+            console.log(msg);
+          }
         }
       }
       for (i = 0, len = list.length; i < len; i++) {

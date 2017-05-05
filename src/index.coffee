@@ -262,8 +262,15 @@ class MiniEventEmitter
 				# The trace message
 				msg = "MiniEventEmitter ~ trace ~ #{event}"
 
-				# Log the message to the console (as a debug if available)
-				if console.debug then console.log "%c #{msg}", "color: #13d" else console.log msg
+				# Only log arguments if they are provided
+				if (argumenten = if args.length is 0 then null else args)
+
+					# Log the message to the console (act asif it is a debug if debug is available) with arguments
+					if console.debug then console.log "%c #{msg}", "color: #13d", argumenten else console.log msg, argumenten
+				else
+
+					# Log the message to the console (act asif it is a debug if debug is available) without arguments
+					if console.debug then console.log "%c #{msg}", "color: #13d" else console.log msg
 
 			# Loop over all functions/actions within a group
 			action.apply action, args for action in list
