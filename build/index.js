@@ -1,7 +1,7 @@
 var MiniEventEmitter;
 
 MiniEventEmitter = (function() {
-  var _emit, error, isFunction, isString, objLength, optional;
+  var _emit, error, isFunction, isString, objLength, optional, removeFn;
 
   function MiniEventEmitter(obj) {
     var webworkify;
@@ -64,20 +64,7 @@ MiniEventEmitter = (function() {
   };
 
   MiniEventEmitter.prototype.off = function(event, group, fn) {
-    var actions, index1, index2, ref, ref1, removeFn;
-    removeFn = (function(_this) {
-      return function() {
-        var action, i, index, len;
-        for (i = 0, len = actions.length; i < len; i++) {
-          action = actions[i];
-          index = _this.events[event].indexOf(action);
-          _this.events[event].splice(index, 1);
-        }
-        if (_this.events[event].length === 0) {
-          return delete _this.events[event];
-        }
-      };
-    })(this);
+    var actions, index1, index2, ref, ref1;
     ref = optional(group, fn), group = ref[0], fn = ref[1];
     if (event && !isString(event)) {
       return error(this, "off", 1);
@@ -95,7 +82,7 @@ MiniEventEmitter = (function() {
       ref1 = this.groups[group];
       for (event in ref1) {
         actions = ref1[event];
-        removeFn();
+        removeFn(this, event, actions);
       }
       delete this.groups[group];
       return this;
@@ -104,7 +91,7 @@ MiniEventEmitter = (function() {
       return error(this, "off", 4, event, group);
     }
     if (!fn) {
-      removeFn();
+      removeFn(this, event, actions);
       delete this.groups[group][event];
       if (0 === objLength(this.groups[group])) {
         delete this.groups[group];
@@ -126,6 +113,22 @@ MiniEventEmitter = (function() {
     if (this.events[event].length === 0) {
       delete this.events[event];
     }
+    return this;
+  };
+
+  MiniEventEmitter.prototype.offGroup = function(name) {
+    var actions, event, group;
+    if (name && !isString(name)) {
+      return error(this, "offGroup", 5);
+    }
+    if (!(group = this.groups[name])) {
+      return error(this, "offGroup", 7);
+    }
+    for (event in group) {
+      actions = group[event];
+      removeFn(this, event, actions);
+    }
+    delete this.groups[name];
     return this;
   };
 
@@ -205,6 +208,18 @@ MiniEventEmitter = (function() {
       }
     }
     return [group, fn];
+  };
+
+  removeFn = function(self, event, actions) {
+    var action, i, index, len;
+    for (i = 0, len = actions.length; i < len; i++) {
+      action = actions[i];
+      index = self.events[event].indexOf(action);
+      self.events[event].splice(index, 1);
+    }
+    if (self.events[event].length === 0) {
+      return delete self.events[event];
+    }
   };
 
   _emit = function(arg) {

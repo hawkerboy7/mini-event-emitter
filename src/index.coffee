@@ -74,21 +74,6 @@ class MiniEventEmitter
 
 	off: (event, group, fn) ->
 
-		# Define the actual remove function variables are already know due to the scope the function is in
-		removeFn = =>
-
-			# Loop over all found functions in the group
-			for action in actions
-
-				# Get the index of the stored function
-				index = @events[event].indexOf action
-
-				# Remove function from events list
-				@events[event].splice index, 1
-
-			# If no functions are left within the group remove it
-			delete @events[event] if @events[event].length is 0
-
 		# Make group optional
 		[group, fn] = optional group, fn
 
@@ -107,7 +92,7 @@ class MiniEventEmitter
 		if not event
 
 			# Remove all events of the provided group
-			removeFn() for event, actions of @groups[group]
+			removeFn this, event, actions for event, actions of @groups[group]
 
 			# Remove the group
 			delete @groups[group]
@@ -122,7 +107,7 @@ class MiniEventEmitter
 		if not fn
 
 			# Remove the eventListeners of the specified group+event
-			removeFn()
+			removeFn this, event, actions
 
 			# Remove all events related to the group
 			delete @groups[group][event]
@@ -154,6 +139,23 @@ class MiniEventEmitter
 		delete @events[event] if @events[event].length is 0
 
 		# Return this to allow chaining
+		this
+
+
+	offGroup: (name) ->
+
+		# Event name must be a string
+		return error this, "offGroup", 5 if name and not isString name
+
+		# Check if group events exist
+		return error this, "offGroup", 7 if not group = @groups[name]
+
+		# Remove all events of the provided group
+		removeFn this, event, actions for event, actions of group
+
+		# Remove the group
+		delete @groups[name]
+
 		this
 
 
@@ -233,6 +235,22 @@ class MiniEventEmitter
 
 		# Return new group and function
 		[group, fn]
+
+
+	# Define the actual remove function variables are already know due to the scope the function is in
+	removeFn = (self, event, actions) =>
+
+		# Loop over all found functions in the group
+		for action in actions
+
+			# Get the index of the stored function
+			index = self.events[event].indexOf action
+
+			# Remove function from events list
+			self.events[event].splice index, 1
+
+		# If no functions are left within the group remove it
+		delete self.events[event] if self.events[event].length is 0
 
 
 	# Actually emit | a higher scope was required
