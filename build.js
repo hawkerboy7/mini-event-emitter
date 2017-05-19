@@ -1,5 +1,4 @@
-require("../../opensource/de-builder")({
-	io: 8002,
+require("de-builder")({
 	forever: {
 		entry   : "test.js",
 		enabled : true
