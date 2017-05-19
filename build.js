@@ -1,7 +1,7 @@
 require("de-builder")({
-	io: 8002,
 	forever: {
-		enabled : false
+		entry   : "test.js",
+		enabled : true
 	},
 	type: 2
 });
