@@ -1,16 +1,11 @@
-
 class MiniEventEmitter
 
-	# --------------------------------------------------
-	# Public functionality
-	# --------------------------------------------------
 	constructor: (@mini, obj) ->
 
-		# Store and define settings
+		# Define and store settings
 		@mini.settings =
 			error  : obj?.error || false
 			trace  : obj?.trace || false
-			worker : obj?.worker || null
 
 		# Store all events
 		@mini.events = {}
@@ -18,149 +13,89 @@ class MiniEventEmitter
 		# Store all groups
 		@mini.groups = {}
 
-		# Create a webworker if required
-		return if not @mini.settings.worker
 
-		# Check if webworkify is defined in the DOM or passed along in the constructor
-		return if not webworkify and not webworkify = obj?.webworkify
-
-		# Create a webworker instance if webworkify is defined in the DOM or provided
-		@mini.worker = webworkify @settings.worker
-
-		# Listen for responses comming from the webworker
-		@mini.worker.addEventListener "message", ({data}) =>
-
-			# Pass along to the _emit function
-			_emit
-				self     : this
-				args     : data.args
-				event    : data.event
-				internal : true
-
-
-	on: (event, group, fn) ->
+	# --------------------------------------------------
+	# Public available
+	# --------------------------------------------------
+	on: (event, group, fn) =>
 
 		# Make group optional
-		[group, fn] = optional group, fn
+		[group, fn] = @optional group, fn
 
-		# Event name must be a string
-		return error this, "on", 1 if not isString event
-
-		# Group must be a string
-		return error this, "on", 5 if not isString group
-
-		# Fn must be a function
-		return error this, "on", 6, event, group if not isFunction fn
+		# Check if the input is valid
+		return @mini if not @valid "on", event, group, fn
 
 		# Check if the provided group exists
-		if @groups[group]
+		if (groups = @mini.groups)[group]
 
-			# Check if the provided event exists within this group and either push to or create an array with functions
-			if @groups[group][event] then @groups[group][event].push fn else @groups[group][event] = [fn]
+			# Check if the provided event exists within this group and either push to or create an array with fns
+			if groups[group][event] then groups[group][event].push fn else groups[group][event] = [fn]
 
 		else
 
 			# Create the provided group
-			@groups[group] = {}
+			groups[group] = {}
 
-			# Create an array with function for this group and event
-			@groups[group][event] = [fn]
+			# Create an array with fn for this group and event
+			groups[group][event] = [fn]
 
 		# Either add a new event or push it to a list with others
-		if @events[event] then @events[event].push fn else @events[event] = [fn]
+		if (events = @mini.events)[event] then events[event].push fn else events[event] = [fn]
 
-		# Return this to allow chaining
-		this
+		# Allow chaining
+		@mini
 
 
-	off: (event, group, fn) ->
+	off: (event, group, fn) =>
 
 		# Make group optional
-		[group, fn] = optional group, fn
+		[group, fn] = @optional group, fn
 
-		# Event name must be a string
-		return error this, "off", 1 if event and not isString event
+		# Check if the input is valid and allow chaining
+		return @mini if not @valid "off", event, group, fn
 
-		# Group must be a string
-		return error this, "off", 5 if not isString group
+		# Provided group does not exist
+		if not @mini.groups[group]
 
-		# Fn must be a function
-		return error this, "off", 6, event, group if fn and not isFunction fn
+			@error "off", 7, event, group
 
-		# Provided group does not have events
-		return error this, "off", 7, event, group if event and not @groups[group]
+			# Allow chaining
+			return @mini
 
-		if not event
+		# No event is provided so remove all fn from the provided group
+		return @removeGroup group if not event
 
-			# Remove all events of the provided group
-			removeFn this, event, actions for event, actions of @groups[group]
+		# Event name does not exist for the provided group
+		if not fns = @mini.groups[group][event]
 
-			# Remove the group
-			delete @groups[group]
+			@error "off", 8, event, group
 
-			# Return this to allow chaining
-			return this
+			# Allow chaining
+			return @mini
 
-		# Event name does not exist for this group
-		return error this, "off", 4, event, group if not actions = @groups[group][event]
-
-		# Check if a function to be removed is defined
+		# If no fn to remove is provided, remove all fns of the event+group
 		if not fn
 
-			# Remove the eventListeners of the specified group+event
-			removeFn this, event, actions
+			@removeFns event, fns
 
-			# Remove all events related to the group
-			delete @groups[group][event]
+			return @mini
 
-			# If no events are left within the group remove it
-			delete @groups[group] if 0 is objLength @groups[group]
+		# Provided fn to remove is not found for the provided event and group
+		if -1 is index = fns.indexOf fn
 
-			# Return this to allow chaining
-			return this
+			@error "off", 2, event, group
 
-		return error this, "off", 2, event, group if -1 is index1 = actions.indexOf fn
+			# Allow chaining
+			return @mini
 
-		# Remove function from groups list
-		actions.splice index1, 1
+		# Remove single fn
+		@removeFn event, group, fns, fn, index
 
-		# If no functions are left within the event of a group remove it
-		delete @groups[group][event] if actions.length is 0
-
-		# If no events are left within the group remove it
-		delete @groups[group] if 0 is objLength @groups[group]
-
-		# Get the index of the stored function
-		index2 = @events[event].indexOf fn
-
-		# Remove function from events list
-		@events[event].splice index2, 1
-
-		# If no functions are left within the group remove it
-		delete @events[event] if @events[event].length is 0
-
-		# Return this to allow chaining
-		this
+		# Allow chaining
+		@mini
 
 
-	offGroup: (name) ->
-
-		# Event name must be a string
-		return error this, "offGroup", 5 if name and not isString name
-
-		# Check if group events exist
-		return error this, "offGroup", 7 if not group = @groups[name]
-
-		# Remove all events of the provided group
-		removeFn this, event, actions for event, actions of group
-
-		# Remove the group
-		delete @groups[name]
-
-		this
-
-
-	emit: ->
+	emit: =>
 
 		# Turn arguments into an array
 		args = Array.from arguments
@@ -168,29 +103,82 @@ class MiniEventEmitter
 		# Retrieve event name from the provided arguments
 		event = args.shift()
 
-		# Pass the emit along to the actual emit function
-		return _emit
-			self     : this
-			args     : args
-			event    : event
-			internal : false
+		# Check if event name is valid return all fn's to be excecuted
+		return @mini if not fns = @validEvent event
+
+		# If traced, all *emited* events will be loged *before* the event is actually emitted
+		if @mini.settings.trace
+
+			# The trace message
+			msg = "MiniEventEmitter ~ trace ~ #{event}"
+
+			# Make trace messages blue if the log.debug is available (in browser)
+			if args.length is 0
+
+				# Log without arguments
+				if console.debug then console.log "%c #{msg}", "color: #13d" else console.log msg
+
+			else
+
+				# Log arguments as well
+				if console.debug then console.log "%c #{msg}", "color: #13d", args else console.log msg, args
+
+		# Excecute all fns of the event
+		fn.apply fn, args for fn in fns
+
+		# Allow chaining
+		@mini
 
 
 	# --------------------------------------------------
-	# Private functionality
+	# Helpers
 	# --------------------------------------------------
+	valid: (name, event, group, fn) ->
 
-	# Shortcuts
-	isString = (event) -> typeof event is "string" or event instanceof String
-	objLength = (obj) -> Object.keys(obj).length
-	isFunction = (fn) -> typeof fn is "function"
+		if name is "on"
+
+			# Event name MUST be a string
+			return @error name, 1 if not @isString event
+
+			# Group MUST be a string
+			return @error name, 5 if not @isString group
+
+			# Fn MUST be a function
+			return @error name, 6, event, group if not @isFunction fn
+
+		if name is "off"
+
+			# Event name MUST be a string OR null
+			return @error name, 1 if event isnt null and not @isString event
+
+			# Group MUST be a string
+			return @error name, 5 if not @isString group
+
+			# Fn MAY be a function
+			return @error name, 6, event, group if fn and not @isFunction fn
+
+		true
 
 
-	# Handling all errors
-	error = (self, name, id, event, group) ->
+	validEvent: (event) ->
+
+		# Event was not provided
+		return @error "emit", 3 if not event
+
+		# Event name must be a string
+		return @error "emit", 1 if not @isString event
+
+		# Event name does not exist
+		return @error "emit", 4, event if not fns = @mini.events[event]
+
+		# Return all found fn's to be excecuted
+		fns
+
+
+	error: (name, id, event, group) ->
 
 		# Only log the message if they are required
-		return self if not self.settings.error
+		return if not @mini.settings.error
 
 		# Prefix all error messages with the MiniEventEmitter text
 		msg = "MiniEventEmitter ~ #{name} ~ "
@@ -201,24 +189,24 @@ class MiniEventEmitter
 		if id is 4 then msg += "EventListener for event \"#{event}\" does not exist"
 		if id is 5 then msg += "Provided group must be a string"
 		if id is 6 then msg += "The last param provided with event \"#{event}\" and group \"#{group}\" is expected to be a function"
-		if id is 7 then msg += "Provided Group \"#{group}\" does not have any events"
+		if id is 7 then msg += "Provided group \"#{group}\" is not found"
+		if id is 8 then msg += "Event \"#{event}\" does not exist for the provided group \"#{group}\""
 
 		# Log the message to the console (as a warning if available)
 		if console then (if console.warn then console.warn msg else console.log msg)
 
-		# Return this/self to allow chaining
-		self
+		false
 
 
-	# Make group optional
-	optional = (group, fn) ->
+	optional: (group, fn) ->
 
-		if not fn? and isFunction group
+		# Check if the "actual" group was provided or only an event and fucntion
+		if not fn? and @isFunction group
 
-			# group must contain the callback function so set it correctly
+			# Group contains the fn, so correct accordingly
 			fn = group
 
-			# Unset the group
+			# Set group to default
 			group = ""
 
 		else
@@ -226,68 +214,63 @@ class MiniEventEmitter
 			# Make sure the group is a string
 			group = "" if not group
 
-		# Return new group and function
+		# Return new group and fn
 		[group, fn]
 
 
-	# Define the actual remove function variables are already know due to the scope the function is in
-	removeFn = (self, event, actions) =>
+	removeGroup: (group) ->
 
-		# Loop over all found functions in the group
-		for action in actions
+		# Remove all events of the provided group
+		@removeFns event, fns for event, fns of @mini.groups[group]
 
-			# Get the index of the stored function
-			index = self.events[event].indexOf action
+		# Remove the group
+		delete @mini.groups[group]
 
-			# Remove function from events list
-			self.events[event].splice index, 1
-
-		# If no functions are left within the group remove it
-		delete self.events[event] if self.events[event].length is 0
+		# Allow chaining
+		@mini
 
 
-	# Actually emit | a higher scope was required
-	_emit = ({self, event, args, internal}) ->
+	removeFns: (event, fns) =>
 
-		# Event was not provided
-		return error self, "emit", 3 if not event
+		# Loop over all found fns in the group
+		for fn in fns
 
-		# Event name must be a string
-		return error self, "emit", 1 if not isString event
+			# Get the index of the fn in the eventlist
+			index = @mini.events[event].indexOf fn
 
-		# Event name does not exist
-		return error self, "emit", 4, event if not list = self.events[event]
+			# Remove the fn from the eventlist
+			@mini.events[event].splice index, 1
 
-		if self.settings.worker and not internal
+		# If no fns are left within the eventlist remove it
+		delete @mini.events[event] if @mini.events[event].length is 0
 
-			# Send along request to
-			self.worker.postMessage
-				args  : args
-				event : event
 
-		else
+	removeFn: (event, group, fns, fn, index) =>
 
-			# If trace is defined by the user it will receive all emited event trough that function
-			if self.settings.trace
+		# Remove fn from groups list
+		fns.splice index, 1
 
-				# The trace message
-				msg = "MiniEventEmitter ~ trace ~ #{event}"
+		# If no fns are left within the event of a group remove it
+		delete @mini.groups[group][event] if fns.length is 0
 
-				# Only log arguments if they are provided
-				if (argumenten = if args.length is 0 then null else args)
+		# If no events are left within the group remove it
+		delete @mini.groups[group] if 0 is @objLength @mini.groups[group]
 
-					# Log the message to the console (act asif it is a debug if debug is available) with arguments
-					if console.debug then console.log "%c #{msg}", "color: #13d", argumenten else console.log msg, argumenten
-				else
+		# Get the index of the fn in the eventlist
+		index = @mini.events[event].indexOf fn
 
-					# Log the message to the console (act asif it is a debug if debug is available) without arguments
-					if console.debug then console.log "%c #{msg}", "color: #13d" else console.log msg
+		# Remove fn from the eventlist
+		@mini.events[event].splice index, 1
 
-			# Loop over all functions/actions within a group
-			action.apply action, args for action in list
+		# If no fns are left within the group remove it
+		delete @mini.events[event] if @mini.events[event].length is 0
 
-		# Return this (self) to allow chaining
-		self
+
+	# Shortcuts
+	isString: (event) -> typeof event is "string" or event instanceof String
+	objLength: (obj) -> Object.keys(obj).length
+	isFunction: (fn) -> typeof fn is "function"
+
 
 
 # --------------------------------------------------

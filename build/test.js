@@ -124,4 +124,4 @@ events = new Events;
 
 events.on("test", function() {
   return console.log("test");
-}).emit("test").off("test");
+}).emit("test").off("test").emit("test");

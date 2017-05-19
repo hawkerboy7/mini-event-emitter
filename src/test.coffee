@@ -71,5 +71,5 @@ events.emit "test"
 
 console.log "\nTest 6"
 events = new Events
-events.on("test",-> console.log "test" ).emit("test").off "test"
+events.on("test",-> console.log "test" ).emit("test").off("test").emit "test"
 

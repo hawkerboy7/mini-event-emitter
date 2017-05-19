@@ -4,15 +4,14 @@ Handler = require "./handler"
 
 class MiniEventEmitter
 
-	# --------------------------------------------------
-	# Public functionality
-	# --------------------------------------------------
 	constructor: (obj) ->
 
-		# Create a handler so methodes will not be exposed
+		# Create a handler so not all methodes will be exposed
 		handler = new Handler this, obj
 
-		# Exposures
+		# --------------------------------------------------
+		# Public exposure
+		# --------------------------------------------------
 		@on      = handler.on
 		@off     = handler.off
 		@emit    = handler.emit
