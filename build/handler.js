@@ -43,6 +43,9 @@ MiniEventEmitter = (function() {
 
   MiniEventEmitter.prototype.off = function(event, group, fn) {
     var fns, index, ref;
+    if (arguments.length === 0) {
+      return this.removeAll();
+    }
     ref = this.optional(group, fn), group = ref[0], fn = ref[1];
     if (!this.valid("off", event, group, fn)) {
       return this.mini;
@@ -190,6 +193,11 @@ MiniEventEmitter = (function() {
       }
     }
     return [group, fn];
+  };
+
+  MiniEventEmitter.prototype.removeAll = function() {
+    this.mini.events = {};
+    return this.mini.groups = {};
   };
 
   MiniEventEmitter.prototype.removeGroup = function(group) {

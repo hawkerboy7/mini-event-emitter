@@ -48,6 +48,9 @@ class MiniEventEmitter
 
 	off: (event, group, fn) =>
 
+		# Remove all events, groups and eventListeners
+		return @removeAll() if arguments.length is 0
+
 		# Make group optional
 		[group, fn] = @optional group, fn
 
@@ -216,6 +219,13 @@ class MiniEventEmitter
 
 		# Return new group and fn
 		[group, fn]
+
+
+	removeAll: ->
+
+		# Will remove all MiniEventEmitter's references to events, groups and eventListeners
+		@mini.events = {}
+		@mini.groups = {}
 
 
 	removeGroup: (group) ->

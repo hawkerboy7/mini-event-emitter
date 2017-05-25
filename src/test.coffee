@@ -1,5 +1,7 @@
 Events = require "./index"
 
+
+
 console.log "Test 1"
 events = new Events
 
@@ -26,10 +28,9 @@ events.off "test", test3
 events.emit "test"
 
 
+
 console.log "\nTest 3"
 events = new Events
-
-
 
 events.on "test", test1 = -> console.log("test1")
 events.on "test", test2 = -> console.log("test2")
@@ -58,7 +59,6 @@ events.emit()
 
 
 
-
 console.log "\nTest 5"
 events = new Events trace: true
 
@@ -72,4 +72,3 @@ events.emit "test"
 console.log "\nTest 6"
 events = new Events
 events.on("test",-> console.log "test" ).emit("test").off("test").emit "test"
-
