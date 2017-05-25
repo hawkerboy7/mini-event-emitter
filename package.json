@@ -7,7 +7,7 @@
   "license": "MIT",
   "homepage": "https://github.com/hawkerboy7/mini-event-emitter#readme",
   "devDependencies": {
-    "de-builder": "^0.7.1"
+    "de-builder": "^0.7.6"
   },
   "repository": {
     "type": "git",
