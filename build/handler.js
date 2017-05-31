@@ -7,6 +7,7 @@ MiniEventEmitter = (function() {
     this.removeFn = bind(this.removeFn, this);
     this.removeFns = bind(this.removeFns, this);
     this.emit = bind(this.emit, this);
+    this.emitIf = bind(this.emitIf, this);
     this.off = bind(this.off, this);
     this.on = bind(this.on, this);
     this.mini.settings = {
@@ -73,29 +74,22 @@ MiniEventEmitter = (function() {
     return this.mini;
   };
 
+  MiniEventEmitter.prototype.emitIf = function() {
+    return this._emit(arguments, true);
+  };
+
   MiniEventEmitter.prototype.emit = function() {
-    var args, event, fn, fns, i, len, msg;
-    args = Array.from(arguments);
+    return this._emit(arguments);
+  };
+
+  MiniEventEmitter.prototype._emit = function(args, skip) {
+    var event, fn, fns, i, len;
+    args = Array.from(args);
     event = args.shift();
-    if (!(fns = this.validEvent(event))) {
+    if (!(fns = this.validEvent(event, skip))) {
       return this.mini;
     }
-    if (this.mini.settings.trace) {
-      msg = "MiniEventEmitter ~ trace ~ " + event;
-      if (args.length === 0) {
-        if (console.debug) {
-          console.log("%c " + msg, "color: #13d");
-        } else {
-          console.log(msg);
-        }
-      } else {
-        if (console.debug) {
-          console.log("%c " + msg, "color: #13d", args);
-        } else {
-          console.log(msg, args);
-        }
-      }
-    }
+    this.trace(event, args);
     for (i = 0, len = fns.length; i < len; i++) {
       fn = fns[i];
       fn.apply(fn, args);
@@ -129,7 +123,7 @@ MiniEventEmitter = (function() {
     return true;
   };
 
-  MiniEventEmitter.prototype.validEvent = function(event) {
+  MiniEventEmitter.prototype.validEvent = function(event, skip) {
     var fns;
     if (!event) {
       return this.error("emit", 3);
@@ -138,7 +132,10 @@ MiniEventEmitter = (function() {
       return this.error("emit", 1);
     }
     if (!(fns = this.mini.events[event])) {
-      return this.error("emit", 4, event);
+      if (!skip) {
+        this.error("emit", 4, event);
+      }
+      return null;
     }
     return fns;
   };
@@ -146,7 +143,7 @@ MiniEventEmitter = (function() {
   MiniEventEmitter.prototype.error = function(name, id, event, group) {
     var msg;
     if (!this.mini.settings.error) {
-      return;
+      return null;
     }
     msg = "MiniEventEmitter ~ " + name + " ~ ";
     if (id === 1) {
@@ -180,7 +177,7 @@ MiniEventEmitter = (function() {
         console.log(msg);
       }
     }
-    return false;
+    return null;
   };
 
   MiniEventEmitter.prototype.optional = function(group, fn) {
@@ -197,7 +194,8 @@ MiniEventEmitter = (function() {
 
   MiniEventEmitter.prototype.removeAll = function() {
     this.mini.events = {};
-    return this.mini.groups = {};
+    this.mini.groups = {};
+    return this.mini;
   };
 
   MiniEventEmitter.prototype.removeGroup = function(group) {
@@ -235,6 +233,26 @@ MiniEventEmitter = (function() {
     this.mini.events[event].splice(index, 1);
     if (this.mini.events[event].length === 0) {
       return delete this.mini.events[event];
+    }
+  };
+
+  MiniEventEmitter.prototype.trace = function(event, args) {
+    var msg;
+    if (this.mini.settings.trace) {
+      msg = "MiniEventEmitter ~ trace ~ " + event;
+      if (args.length === 0) {
+        if (console.debug) {
+          return console.log("%c " + msg, "color: #13d");
+        } else {
+          return console.log(msg);
+        }
+      } else {
+        if (console.debug) {
+          return console.log("%c " + msg, "color: #13d", args);
+        } else {
+          return console.log(msg, args);
+        }
+      }
     }
   };
 

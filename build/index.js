@@ -9,7 +9,9 @@ MiniEventEmitter = (function() {
     this.on = handler.on;
     this.off = handler.off;
     this.emit = handler.emit;
+    this.emitIf = handler.emitIf;
     this.trigger = handler.emit;
+    this.triggerIf = handler.emitIf;
   }
 
   return MiniEventEmitter;

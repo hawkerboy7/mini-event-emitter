@@ -22,7 +22,7 @@ class MiniEventEmitter
 		# Make group optional
 		[group, fn] = @optional group, fn
 
-		# Check if the input is valid
+		# Check if the input is valid if not allow chaining
 		return @mini if not @valid "on", event, group, fn
 
 		# Check if the provided group exists
@@ -54,7 +54,7 @@ class MiniEventEmitter
 		# Make group optional
 		[group, fn] = @optional group, fn
 
-		# Check if the input is valid and allow chaining
+		# Check if the input is valid if not allow chaining
 		return @mini if not @valid "off", event, group, fn
 
 		# Provided group does not exist
@@ -81,6 +81,7 @@ class MiniEventEmitter
 
 			@removeFns event, fns
 
+			# Allow chaining
 			return @mini
 
 		# Provided fn to remove is not found for the provided event and group
@@ -98,39 +99,36 @@ class MiniEventEmitter
 		@mini
 
 
+	emitIf: =>
+
+		@_emit arguments, true
+
+
 	emit: =>
 
+		@_emit arguments
+
+
+	_emit: (args, skip) ->
+
 		# Turn arguments into an array
-		args = Array.from arguments
+		args = Array.from args
 
 		# Retrieve event name from the provided arguments
 		event = args.shift()
 
-		# Check if event name is valid return all fn's to be excecuted
-		return @mini if not fns = @validEvent event
+		# Check if the provided event exists
+		return @mini if not fns = @validEvent event, skip
 
-		# If traced, all *emited* events will be loged *before* the event is actually emitted
-		if @mini.settings.trace
-
-			# The trace message
-			msg = "MiniEventEmitter ~ trace ~ #{event}"
-
-			# Make trace messages blue if the log.debug is available (in browser)
-			if args.length is 0
-
-				# Log without arguments
-				if console.debug then console.log "%c #{msg}", "color: #13d" else console.log msg
-
-			else
-
-				# Log arguments as well
-				if console.debug then console.log "%c #{msg}", "color: #13d", args else console.log msg, args
+		# Trace the event
+		@trace event, args
 
 		# Excecute all fns of the event
 		fn.apply fn, args for fn in fns
 
 		# Allow chaining
 		@mini
+
 
 
 	# --------------------------------------------------
@@ -163,7 +161,7 @@ class MiniEventEmitter
 		true
 
 
-	validEvent: (event) ->
+	validEvent: (event, skip) ->
 
 		# Event was not provided
 		return @error "emit", 3 if not event
@@ -172,7 +170,12 @@ class MiniEventEmitter
 		return @error "emit", 1 if not @isString event
 
 		# Event name does not exist
-		return @error "emit", 4, event if not fns = @mini.events[event]
+		if not fns = @mini.events[event]
+
+			# Send the error with emit but not with emitIf
+			@error "emit", 4, event if not skip
+
+			return null
 
 		# Return all found fn's to be excecuted
 		fns
@@ -181,7 +184,7 @@ class MiniEventEmitter
 	error: (name, id, event, group) ->
 
 		# Only log the message if they are required
-		return if not @mini.settings.error
+		return null if not @mini.settings.error
 
 		# Prefix all error messages with the MiniEventEmitter text
 		msg = "MiniEventEmitter ~ #{name} ~ "
@@ -198,7 +201,7 @@ class MiniEventEmitter
 		# Log the message to the console (as a warning if available)
 		if console then (if console.warn then console.warn msg else console.log msg)
 
-		false
+		null
 
 
 	optional: (group, fn) ->
@@ -223,9 +226,12 @@ class MiniEventEmitter
 
 	removeAll: ->
 
-		# Will remove all MiniEventEmitter's references to events, groups and eventListeners
+		# Removes all MiniEventEmitter's references to events, groups and eventListeners
 		@mini.events = {}
 		@mini.groups = {}
+
+		# Allow chaining
+		@mini
 
 
 	removeGroup: (group) ->
@@ -274,6 +280,26 @@ class MiniEventEmitter
 
 		# If no fns are left within the group remove it
 		delete @mini.events[event] if @mini.events[event].length is 0
+
+
+	trace: (event, args) ->
+
+		# If traced, all *emited* events will be loged *before* the event is actually emitted
+		if @mini.settings.trace
+
+			# The trace message
+			msg = "MiniEventEmitter ~ trace ~ #{event}"
+
+			# Make trace messages blue if the log.debug is available (in browser)
+			if args.length is 0
+
+				# Log without arguments
+				if console.debug then console.log "%c #{msg}", "color: #13d" else console.log msg
+
+			else
+
+				# Log arguments as well
+				if console.debug then console.log "%c #{msg}", "color: #13d", args else console.log msg, args
 
 
 	# Shortcuts
