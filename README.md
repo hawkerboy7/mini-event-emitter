@@ -109,6 +109,12 @@ Remove all *event*s and *eventListener*s in this **group**. *(the first argument
 #### `.trigger(event[, ...])`
 Same as `.emit()`
 
+#### `.emitIf(event[, ...])`
+Same as `.emit()` but the event will only be send if it is being listened for
+
+#### `.triggerIf(event[, ...])`
+Same as `.emitIf()`
+
 
 
 ## Aditional examples
@@ -339,7 +345,9 @@ var events = new Events = require("mini-event-emitter");
 events.on()
 events.off()
 events.emit()
+events.emitIf()
 events.trigger()
+events.triggerIf()
 
 // MiniEventEmitter references and storage objects
 events.events

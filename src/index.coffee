@@ -12,10 +12,12 @@ class MiniEventEmitter
 		# --------------------------------------------------
 		# Public exposure
 		# --------------------------------------------------
-		@on      = handler.on
-		@off     = handler.off
-		@emit    = handler.emit
-		@trigger = handler.emit
+		@on        = handler.on
+		@off       = handler.off
+		@emit      = handler.emit
+		@emitIf    = handler.emitIf
+		@trigger   = handler.emit
+		@triggerIf = handler.emitIf
 
 
 
