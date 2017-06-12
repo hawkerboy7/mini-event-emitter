@@ -54,9 +54,6 @@ events.on("test", function () { console.log(JSON.stringify(arguments)); });
 // Fire the test event with some example arguments
 events.emit("test", 4, "hello", [1,"2",[3]], {a:1,b:2,c:{d:3,e:4}});
 
-// Fire the test event
-events.emit("test");
-
 // Response: {"0":4,"1":"hello","2":[1,"2",[3]],"3":{"a":1,"b":2,"c":{"d":3,"e":4}}}
 
 // Remove all "test" eventListeners (without a group)

@@ -75,7 +75,6 @@ events.on("test",-> console.log "test" ).emit("test").off("test").emit "test"
 
 
 
-
 console.log "\nTest 7"
 events = new Events error: true
 events.on("test",-> console.log "test, no error is expected below this line" ).emitIf("test", "argument1").off("test").emitIf "test", "argument1"
