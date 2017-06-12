@@ -65,7 +65,7 @@ class MiniEventEmitter
 			# Allow chaining
 			return @mini
 
-		# No event is provided so remove all fn from the provided group
+		# No event (event === null) is provided so remove all events and fns from the provided group
 		return @removeGroup group if not event
 
 		# Event name does not exist for the provided group
@@ -77,12 +77,7 @@ class MiniEventEmitter
 			return @mini
 
 		# If no fn to remove is provided, remove all fns of the event+group
-		if not fn
-
-			@removeFns event, fns
-
-			# Allow chaining
-			return @mini
+		return @removeFns event, group, fns if not fn
 
 		# Provided fn to remove is not found for the provided event and group
 		if -1 is index = fns.indexOf fn
@@ -237,39 +232,33 @@ class MiniEventEmitter
 	removeGroup: (group) ->
 
 		# Remove all events of the provided group
-		@removeFns event, fns for event, fns of @mini.groups[group]
-
-		# Remove the group
-		delete @mini.groups[group]
+		@removeFns event, group, fns for event, fns of @mini.groups[group]
 
 		# Allow chaining
 		@mini
 
 
-	removeFns: (event, fns) =>
+	removeFns: (event, group, fns) =>
 
-		# Loop over all found fns in the group
-		for fn in fns
+		# Loop over all found fns in the group in reverse order to maintain the correct indexes after splic has been performed
+		@removeFn event, group, fns, fn for fn in fns by -1
 
-			# Get the index of the fn in the eventlist
-			index = @mini.events[event].indexOf fn
-
-			# Remove the fn from the eventlist
-			@mini.events[event].splice index, 1
-
-		# If no fns are left within the eventlist remove it
-		delete @mini.events[event] if @mini.events[event].length is 0
+		# Allow chaining
+		@mini
 
 
 	removeFn: (event, group, fns, fn, index) =>
 
+		# Get the index of the fn in the fns if no index is provided
+		index = fns.indexOf fn if not index
+
 		# Remove fn from groups list
 		fns.splice index, 1
 
-		# If no fns are left within the event of a group remove it
+		# If no fns are left within the event of a group remove it (clean up)
 		delete @mini.groups[group][event] if fns.length is 0
 
-		# If no events are left within the group remove it
+		# If no events are left within the group remove it (clean up)
 		delete @mini.groups[group] if 0 is @objLength @mini.groups[group]
 
 		# Get the index of the fn in the eventlist
@@ -278,7 +267,7 @@ class MiniEventEmitter
 		# Remove fn from the eventlist
 		@mini.events[event].splice index, 1
 
-		# If no fns are left within the group remove it
+		# If no fns are left within the eventlist remove it (clean up)
 		delete @mini.events[event] if @mini.events[event].length is 0
 
 
