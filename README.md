@@ -49,14 +49,14 @@ var Events = require("mini-event-emitter");
 var events = new Events();
 
 // Listen for the "test" event and fire an anonymous function
-events.on("test", function () { console.log(JSON.stringify(arguments)); });
+events.on("test", function (a,b) { console.log(a,b); });
 
 // Fire the test event with some example arguments
-events.emit("test", 4, "hello", [1,"2",[3]], {a:1,b:2,c:{d:3,e:4}});
+events.emit("test", "my first argument", "my second argument");
 
-// Response: {"0":4,"1":"hello","2":[1,"2",[3]],"3":{"a":1,"b":2,"c":{"d":3,"e":4}}}
+// Response: my first argument my second argument
 
-// Remove all "test" eventListeners (without a group)
+// Remove all "test" eventListeners
 events.off("test");
 
 // Will not fire because all "test" eventListeners have been removed
@@ -239,10 +239,18 @@ events.emit("test1").emit("test2").emit("test3");
 
 
 ### Logging
-As decribed earlier you can also log actions which do not make sense and probably are mistakes `error`.
-You also have the ability to `trace` **succesfull events**.
-You can switch the logging on by providing a `{error: true, trace: true}` as the first argument when creating a new instace of the `MiniEventEmitter`.
-By default all logging is disabled.
+#### `new Events([options])`
+- `options` **object**, contains the options for this `MiniEventEmitter` instance
+
+##### `options.error = [boolean]`
+Defaults to `false`. If `true` is provided actions which do not make sense and probably are mistakes are logged.
+
+##### `options.trace = [boolean]`
+Defaults to `false`. If `true` is provided **succesfull events** and their arguments, if available, will be logged.
+
+##### `options.name = [string]`
+Defaults to `MiniEventEmitter`. If `[string]` is provided `error` and `trace` messages will contain the provided name.
+<br><br>
 While running the application you could toggle the `trace` and `error`.
 `events.settings.[error/trace] = true/false`.
 **Pay attention though!**
@@ -284,7 +292,7 @@ var events = new Events({trace: true});
 
 // All traces of succesfull "event emits" will be shown in the console
 
-// Create an example text event with eventListener
+// Create an example test event with eventListener
 events.on("test", function () {console.log("test message");});
 
 // Fire the "test" event
@@ -299,6 +307,33 @@ events.settings.trace = false
 events.emit("test");
 
 // Response: "test message"
+```
+
+
+#### Name example
+```javascript
+// Require the MiniEventEmitter
+var Events = require("mini-event-emitter");
+
+// Create a new instance of the MiniEventEmitter
+var events = new Events({trace: true, error: true, name: "My Name"});
+
+// Any possible mistake will now be shown in the console
+// All traces of succesfull "event emits" will be shown in the console
+
+// Create an example test event with eventListener
+events.on("test", function () {console.log("test message");});
+
+// Fire the "test" event
+events.emit("test");
+
+// Response: "My Name ~ trace ~ test"
+// Response: "test message"
+
+// Trigger the emit function without event name
+events.emit();
+
+// Response: "My Name ~ emit ~ Event was not provided"
 ```
 
 

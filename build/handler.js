@@ -11,6 +11,7 @@ MiniEventEmitter = (function() {
     this.off = bind(this.off, this);
     this.on = bind(this.on, this);
     this.mini.settings = {
+      name: (obj != null ? obj.name : void 0) || "MiniEventEmitter",
       error: (obj != null ? obj.error : void 0) || false,
       trace: (obj != null ? obj.trace : void 0) || false
     };
@@ -144,7 +145,7 @@ MiniEventEmitter = (function() {
     if (!this.mini.settings.error) {
       return null;
     }
-    msg = "MiniEventEmitter ~ " + name + " ~ ";
+    msg = this.mini.settings.name + " ~ " + name + " ~ ";
     if (id === 1) {
       msg += "Event name must be a string";
     }
@@ -237,7 +238,7 @@ MiniEventEmitter = (function() {
   MiniEventEmitter.prototype.trace = function(event, args) {
     var msg;
     if (this.mini.settings.trace) {
-      msg = "MiniEventEmitter ~ trace ~ " + event;
+      msg = this.mini.settings.name + " ~ trace ~ " + event;
       if (args.length === 0) {
         if (console.debug) {
           return console.log("%c " + msg, "color: #13d");

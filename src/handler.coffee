@@ -4,8 +4,9 @@ class MiniEventEmitter
 
 		# Define and store settings
 		@mini.settings =
-			error  : obj?.error || false
-			trace  : obj?.trace || false
+			name  : obj?.name || "MiniEventEmitter"
+			error : obj?.error || false
+			trace : obj?.trace || false
 
 		# Store all events
 		@mini.events = {}
@@ -182,7 +183,7 @@ class MiniEventEmitter
 		return null if not @mini.settings.error
 
 		# Prefix all error messages with the MiniEventEmitter text
-		msg = "MiniEventEmitter ~ #{name} ~ "
+		msg = "#{@mini.settings.name} ~ #{name} ~ "
 
 		if id is 1 then msg += "Event name must be a string"
 		if id is 2 then msg += "Provided function to remove with event \"#{event}\" in group \"#{group}\" is not found"
@@ -277,7 +278,7 @@ class MiniEventEmitter
 		if @mini.settings.trace
 
 			# The trace message
-			msg = "MiniEventEmitter ~ trace ~ #{event}"
+			msg = "#{@mini.settings.name} ~ trace ~ #{event}"
 
 			# Make trace messages blue if the log.debug is available (in browser)
 			if args.length is 0
