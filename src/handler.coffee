@@ -4,15 +4,23 @@ class MiniEventEmitter
 
 		# Define and store settings
 		@mini.settings =
-			name  : obj?.name || "MiniEventEmitter"
-			error : obj?.error || false
-			trace : obj?.trace || false
+			max    : obj?.max || 50
+			name   : obj?.name || "MiniEventEmitter"
+			error  : obj?.error || false
+			trace  : obj?.trace || false
+
+			panel:
+				width  : obj?.width || 300
+				height : obj?.height || 300
 
 		# Store all events
 		@mini.events = {}
 
 		# Store all groups
 		@mini.groups = {}
+
+		# Store requests made
+		@mini.cache = []
 
 
 	# --------------------------------------------------
@@ -290,6 +298,12 @@ class MiniEventEmitter
 
 				# Log arguments as well
 				if console.debug then console.log "%c #{msg}", "color: #13d", args else console.log msg, args
+
+		# Prevent cache from growing beyond the max
+		@mini.cache.shift() if @mini.cache.length >= @mini.settings.max
+
+		# Add the event and arguments about to be emited
+		@mini.cache.push [event, args]
 
 
 	# Shortcuts

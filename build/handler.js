@@ -11,12 +11,18 @@ MiniEventEmitter = (function() {
     this.off = bind(this.off, this);
     this.on = bind(this.on, this);
     this.mini.settings = {
+      max: (obj != null ? obj.max : void 0) || 50,
       name: (obj != null ? obj.name : void 0) || "MiniEventEmitter",
       error: (obj != null ? obj.error : void 0) || false,
-      trace: (obj != null ? obj.trace : void 0) || false
+      trace: (obj != null ? obj.trace : void 0) || false,
+      panel: {
+        width: (obj != null ? obj.width : void 0) || 300,
+        height: (obj != null ? obj.height : void 0) || 300
+      }
     };
     this.mini.events = {};
     this.mini.groups = {};
+    this.mini.cache = [];
   }
 
   MiniEventEmitter.prototype.on = function(event, group, fn) {
@@ -241,18 +247,22 @@ MiniEventEmitter = (function() {
       msg = this.mini.settings.name + " ~ trace ~ " + event;
       if (args.length === 0) {
         if (console.debug) {
-          return console.log("%c " + msg, "color: #13d");
+          console.log("%c " + msg, "color: #13d");
         } else {
-          return console.log(msg);
+          console.log(msg);
         }
       } else {
         if (console.debug) {
-          return console.log("%c " + msg, "color: #13d", args);
+          console.log("%c " + msg, "color: #13d", args);
         } else {
-          return console.log(msg, args);
+          console.log(msg, args);
         }
       }
     }
+    if (this.mini.cache.length >= this.mini.settings.max) {
+      this.mini.cache.shift();
+    }
+    return this.mini.cache.push([event, args]);
   };
 
   MiniEventEmitter.prototype.isString = function(event) {
