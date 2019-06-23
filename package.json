@@ -1,13 +1,13 @@
 {
   "name": "mini-event-emitter",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "An easy javascript EventEmitter which has no dependencies and the possibility to group events, log errors and trace events",
   "main": "build/index.js",
   "author": "Dexter Esajas <dexter.esajas@gmail.com>",
   "license": "MIT",
   "homepage": "https://github.com/hawkerboy7/mini-event-emitter#readme",
   "devDependencies": {
-    "de-builder": "^0.7.6"
+    "de-builder": "^0.9.2"
   },
   "repository": {
     "type": "git",

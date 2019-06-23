@@ -83,14 +83,14 @@ MiniEventEmitter = (function() {
   };
 
   MiniEventEmitter.prototype._emit = function(args, skip) {
-    var event, fn, fns, i, len;
+    var event, fn, fns, i;
     args = Array.from(args);
     event = args.shift();
     if (!(fns = this.validEvent(event, skip))) {
       return this.mini;
     }
     this.trace(event, args);
-    for (i = 0, len = fns.length; i < len; i++) {
+    for (i = fns.length - 1; i >= 0; i += -1) {
       fn = fns[i];
       fn.apply(fn, args);
     }
