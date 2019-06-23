@@ -120,7 +120,7 @@ class MiniEventEmitter
 		@trace event, args
 
 		# Excecute all fns of the event
-		fn.apply fn, args for fn in fns
+		fn.apply fn, args for fn in fns by -1
 
 		# Allow chaining
 		@mini
