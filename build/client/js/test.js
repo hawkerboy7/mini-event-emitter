@@ -1,6 +1,10 @@
 var Events, events, test1, test2, test3, test4, test5, test6;
 
-Events = require("./app");
+if (!MiniEventEmitter) {
+  Events = require("./app");
+} else {
+  Events = MiniEventEmitter;
+}
 
 console.log("Test 1");
 

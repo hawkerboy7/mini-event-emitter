@@ -1,5 +1,7 @@
-Events = require "./app"
-
+if not MiniEventEmitter
+	Events = require "./app"
+else
+	Events = MiniEventEmitter
 
 
 console.log "Test 1"
