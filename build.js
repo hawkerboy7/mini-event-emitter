@@ -1,13 +1,8 @@
 require('de-builder')({
-	"less": {
-		"enabled": false
-	},
-	"forever": {
-		"enabled": false
-	},
 	"browserSync": {
 		"enabled": false
-	}
+	},
+	"type": 3
 });
 
 
