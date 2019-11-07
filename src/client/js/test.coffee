@@ -1,4 +1,4 @@
-Events = require "./index"
+Events = require "./app"
 
 
 
