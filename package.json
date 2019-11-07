@@ -6,7 +6,9 @@
   "author": "Dexter Esajas <dexter.esajas@gmail.com>",
   "license": "MIT",
   "homepage": "https://github.com/hawkerboy7/mini-event-emitter#readme",
-  "devDependencies": {},
+  "devDependencies": {
+    "de-builder": "^0.9.2"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hawkerboy7/mini-event-emitter.git"
@@ -25,8 +27,5 @@
     "verbose",
     "eventemitter",
     "event-emitter"
-  ],
-  "dependencies": {
-    "de-builder": "^0.9.2"
-  }
+  ]
 }
