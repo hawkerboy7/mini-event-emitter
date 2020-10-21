@@ -14,6 +14,8 @@ MiniEventEmitter = (function() {
     this.triggerIf = handler.emitIf;
   }
 
+  MiniEventEmitter.prototype.listen = function(type, event, args) {};
+
   return MiniEventEmitter;
 
 })();

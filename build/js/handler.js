@@ -142,10 +142,7 @@ MiniEventEmitter = (function() {
 
   MiniEventEmitter.prototype.error = function(name, id, event, group) {
     var msg;
-    if (!this.mini.settings.error) {
-      return null;
-    }
-    msg = this.mini.settings.name + " ~ " + name + " ~ ";
+    msg = name + " ~ ";
     if (id === 1) {
       msg += "Event name must be a string";
     }
@@ -170,6 +167,11 @@ MiniEventEmitter = (function() {
     if (id === 8) {
       msg += "Event \"" + event + "\" does not exist for the provided group \"" + group + "\"";
     }
+    this.mini.listen("error", event, [msg, name, id, group]);
+    if (!this.mini.settings.error) {
+      return null;
+    }
+    msg = this.mini.settings.name + " ~ " + msg;
     if (console) {
       if (console.warn) {
         console.warn(msg);
@@ -237,6 +239,7 @@ MiniEventEmitter = (function() {
 
   MiniEventEmitter.prototype.trace = function(event, args) {
     var msg;
+    this.mini.listen("trace", event, args);
     if (this.mini.settings.trace) {
       msg = this.mini.settings.name + " ~ trace ~ " + event;
       if (args.length === 0) {

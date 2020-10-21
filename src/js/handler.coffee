@@ -179,11 +179,8 @@ class MiniEventEmitter
 
 	error: (name, id, event, group) ->
 
-		# Only log the message if they are required
-		return null if not @mini.settings.error
-
 		# Prefix all error messages with the MiniEventEmitter text
-		msg = "#{@mini.settings.name} ~ #{name} ~ "
+		msg = "#{name} ~ "
 
 		if id is 1 then msg += "Event name must be a string"
 		if id is 2 then msg += "Provided function to remove with event \"#{event}\" in group \"#{group}\" is not found"
@@ -193,6 +190,14 @@ class MiniEventEmitter
 		if id is 6 then msg += "The last param provided with event \"#{event}\" and group \"#{group}\" is expected to be a function"
 		if id is 7 then msg += "Provided group \"#{group}\" is not found"
 		if id is 8 then msg += "Event \"#{event}\" does not exist for the provided group \"#{group}\""
+
+		# Allow for external code to listen in
+		@mini.listen "error", event, [msg, name, id, group]
+
+		# Only log the message if they are required
+		return null if not @mini.settings.error
+
+		msg = "#{@mini.settings.name} ~ #{msg}"
 
 		# Log the message to the console (as a warning if available)
 		if console then (if console.warn then console.warn msg else console.log msg)
@@ -241,7 +246,7 @@ class MiniEventEmitter
 
 	removeFns: (event, group, fns) =>
 
-		# Loop over all found fns in the group in reverse order to maintain the correct indexes after splic has been performed
+		# Loop over all found fns in the group in reverse order to maintain the correct indexes after splice has been performed
 		@removeFn event, group, fns, fn for fn in fns by -1
 
 		# Allow chaining
@@ -273,6 +278,9 @@ class MiniEventEmitter
 
 
 	trace: (event, args) ->
+
+		# Allow for external code to listen in
+		@mini.listen "trace", event, args
 
 		# If traced, all *emited* events will be loged *before* the event is actually emitted
 		if @mini.settings.trace
